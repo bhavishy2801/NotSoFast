@@ -1,0 +1,7 @@
+.tools/
+.state/
+*.exe
+__pycache__/
+*.db*
+coverage.out
+
