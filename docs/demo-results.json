@@ -1,0 +1,46 @@
+{
+  "incomplete_search": [
+    "UNKNOWN",
+    "REFUTED"
+  ],
+  "composition": {
+    "missing_and_duplicates": "UNKNOWN",
+    "complete": "SUPPORTED"
+  },
+  "concurrent_publication": [
+    "PUBLISHED",
+    "STATE_CHANGED",
+    "REFUTED"
+  ],
+  "incremental_reuse": {
+    "outcomes": [
+      "REFUTED",
+      "REFUTED"
+    ],
+    "derived_total_ns": 1002227700,
+    "fresh_total_ns": 1258018400,
+    "stats": {
+      "evaluated": 1,
+      "reused": 4,
+      "bytes": 11,
+      "manifest_ns": 387146400,
+      "lookup_ns": 0,
+      "evaluation_ns": 162979400,
+      "receipt_ns": 0,
+      "total_ns": 999513000
+    }
+  },
+  "forged_evidence": [
+    "INVALID_EVIDENCE",
+    "INVALID_EVIDENCE"
+  ],
+  "lost_response": {
+    "same_commit": true,
+    "second_publication": false
+  },
+  "transport": {
+    "tool_calls": 27,
+    "bytes_returned": 10795,
+    "actual_model_calls": 0
+  }
+}
