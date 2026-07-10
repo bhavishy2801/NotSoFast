@@ -57,10 +57,15 @@ func (s *Service) search(ctx context.Context, user string, q SearchRequest) (Rec
 		return r, e
 	}
 	inherited := map[string]Evaluation{}
+	parentEntries := 0
 	for _, id := range q.Parents {
 		old, e := s.Receipt(ctx, user, id)
 		if e != nil {
 			return r, e
+		}
+		parentEntries += len(old.Evaluations)
+		if parentEntries > s.cfg.MaxEntries*4 {
+			return r, fail("LIMIT", "combined evidence limit")
 		}
 		if old.Repository != q.Repository || digest(old.Predicate) != digest(q.Predicate) {
 			return r, fail("INVALID_EVIDENCE", "incompatible parent")

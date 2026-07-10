@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +49,7 @@ func Open(cfg Config) (*Service, error) {
 	if cfg.MaxEntries == 0 {
 		cfg.MaxEntries = 100000
 	}
-	if cfg.Workers < 1 || cfg.Workers > 64 || cfg.MaxBlobBytes < 1 || cfg.MaxBlobBytes > 32<<20 || cfg.MaxStorageBytes < 1 || cfg.MaxEntries < 1 || cfg.MaxEntries > 1000000 {
+	if cfg.Workers < 1 || cfg.Workers > 64 || cfg.MaxBlobBytes < 1 || cfg.MaxBlobBytes > 32<<20 || cfg.MaxStorageBytes < 8<<20 || cfg.MaxEntries < 1 || cfg.MaxEntries > 100000 {
 		return nil, fail("CONFIG", "invalid limits")
 	}
 	for _, p := range cfg.Policies {
@@ -58,6 +59,14 @@ func Open(cfg Config) (*Service, error) {
 	}
 	if e = os.MkdirAll(filepath.Join(cfg.Root, "repos"), 0700); e != nil {
 		return nil, e
+	}
+	version, e := gitText(context.Background(), cfg.Root, nil, "--version")
+	var major, minor int
+	if e != nil {
+		return nil, e
+	}
+	if _, e = fmt.Sscanf(version, "git version %d.%d", &major, &minor); e != nil || major < 2 || (major == 2 && minor < 30) {
+		return nil, fail("CONFIG", "Git 2.30 or newer required")
 	}
 	lease, e := sql.Open("sqlite3", filepath.Join(cfg.Root, "instance.db")+"?_busy_timeout=0")
 	if e != nil {
@@ -74,13 +83,34 @@ func Open(cfg Config) (*Service, error) {
 		return nil, e
 	}
 	db.SetMaxOpenConns(1)
+	if _, e = db.Exec(fmt.Sprintf("PRAGMA max_page_count=%d; PRAGMA wal_autocheckpoint=256; PRAGMA journal_size_limit=8388608;", cfg.MaxStorageBytes/(8*4096))); e != nil {
+		db.Close()
+		lease.Close()
+		return nil, e
+	}
 	_, e = db.Exec(`CREATE TABLE IF NOT EXISTS receipts(id TEXT PRIMARY KEY, body BLOB NOT NULL); CREATE TABLE IF NOT EXISTS cache(key TEXT PRIMARY KEY,result TEXT NOT NULL CHECK(result IN ('MATCH','NO_MATCH')), integrity TEXT NOT NULL);`)
 	if e != nil {
 		db.Close()
 		lease.Close()
 		return nil, e
 	}
-	return &Service{cfg: cfg, db: db, lease: lease}, nil
+	s := &Service{cfg: cfg, db: db, lease: lease}
+	dirs, e := os.ReadDir(filepath.Join(cfg.Root, "repos"))
+	if e != nil {
+		s.Close()
+		return nil, e
+	}
+	// Revocation applies even to a repository removed from the new configuration.
+	for _, dir := range dirs {
+		n := dir.Name()
+		if dir.IsDir() && len(n) == 68 && strings.HasSuffix(n, ".git") && oidValid(n[:64]) {
+			if e = s.activatePolicyDirectory(context.Background(), filepath.Join(cfg.Root, "repos", n)); e != nil {
+				s.Close()
+				return nil, e
+			}
+		}
+	}
+	return s, nil
 }
 func (s *Service) Close() error { e := s.db.Close(); s.lease.Close(); return e }
 func (s *Service) authorize(user, repo string, write bool) error {
@@ -109,7 +139,8 @@ func (s *Service) budget() error {
 	if e != nil {
 		return e
 	}
-	if n+maxGitOutput > s.cfg.MaxStorageBytes {
+	// Reserve for bounded Git writes, maximum SQLite growth and WAL persistence.
+	if n+(128<<20)+s.cfg.MaxStorageBytes/8 > s.cfg.MaxStorageBytes {
 		return fail("STORAGE_LIMIT", "storage reserve exhausted; records are retained")
 	}
 	return nil

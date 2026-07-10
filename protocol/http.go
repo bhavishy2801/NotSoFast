@@ -32,6 +32,14 @@ func writeError(w http.ResponseWriter, status int, reason string) {
 	json.NewEncoder(w).Encode(map[string]any{"error": map[string]string{"reason": reason}})
 }
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Drain bounded rejected request bodies before connection teardown (notably
+	// Connection: close clients on Windows), so the error response is delivered.
+	defer func() {
+		if r.Body != nil {
+			_, _ = io.Copy(io.Discard, io.LimitReader(r.Body, 2<<20))
+			_ = r.Body.Close()
+		}
+	}()
 	h.requests.Add(1)
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")

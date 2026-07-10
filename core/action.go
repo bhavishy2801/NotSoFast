@@ -11,7 +11,7 @@ import (
 func operationRef(user, id string) string {
 	return "refs/notsofast/operations/" + digest([]string{user, id})
 }
-func intentRef(user,id string)string{return "refs/notsofast/intents/"+digest([]string{user,id})}
+func intentRef(user, id string) string { return "refs/notsofast/intents/" + digest([]string{user, id}) }
 func (s *Service) Operation(ctx context.Context, user, repo, id string) (Operation, error) {
 	var op Operation
 	if e := s.authorize(user, repo, false); e != nil {
@@ -19,14 +19,30 @@ func (s *Service) Operation(ctx context.Context, user, repo, id string) (Operati
 	}
 	ref := operationRef(user, id)
 	exists, e := gitText(ctx, s.repo(repo), nil, "for-each-ref", "--format=%(objectname)", ref)
-	if e!=nil{return op,fail("UNRESOLVED","operation references unavailable")}
-	if exists=="" { exists,e=gitText(ctx,s.repo(repo),nil,"for-each-ref","--format=%(objectname)",intentRef(user,id));if e!=nil{return op,fail("UNRESOLVED","intent references unavailable")};if exists==""{return op,fail("NOT_FOUND","operation unavailable")} }
+	if e != nil {
+		return op, fail("UNRESOLVED", "operation references unavailable")
+	}
+	if exists == "" {
+		exists, e = gitText(ctx, s.repo(repo), nil, "for-each-ref", "--format=%(objectname)", intentRef(user, id))
+		if e != nil {
+			return op, fail("UNRESOLVED", "intent references unavailable")
+		}
+		if exists == "" {
+			return op, fail("NOT_FOUND", "operation unavailable")
+		}
+	}
 	b, e := git(ctx, s.repo(repo), nil, "show", exists+":operation.json")
 	if e != nil || json.Unmarshal(b, &op) != nil || op.Requester != user || op.ID != id || !oidValid(op.Candidate) || !oidValid(op.Base) {
 		return Operation{}, fail("UNRESOLVED", "operation metadata unavailable")
 	}
+	message, e := gitText(ctx, s.repo(repo), nil, "show", "-s", "--format=%B", op.Candidate)
+	parent, pe := gitText(ctx, s.repo(repo), nil, "show", "-s", "--format=%P", op.Candidate)
+	if e != nil || pe != nil || parent != op.Base || message != "NotSoFast operation "+digest([]string{op.Requester, op.Digest}) {
+		return Operation{}, fail("UNRESOLVED", "candidate operation binding invalid")
+	}
 	if _, e = git(ctx, s.repo(repo), nil, "merge-base", "--is-ancestor", op.Candidate, branch); e != nil {
-		op.Outcome="UNRESOLVED";return op, fail("UNRESOLVED", "intent exists but publication is not established")
+		op.Outcome = "UNRESOLVED"
+		return op, fail("UNRESOLVED", "intent exists but publication is not established")
 	}
 	return op, nil
 }
@@ -45,7 +61,9 @@ func (s *Service) GuardedCreate(ctx context.Context, user string, q CreateReques
 	sort.Strings(q.Receipts)
 	payload := digest(q)
 	existing, e := s.Operation(ctx, user, q.Repository, q.Operation)
-	if existing.Digest!=""&&existing.Digest!=payload {return op,fail("OPERATION_CONFLICT","operation ID has a different payload")}
+	if existing.Digest != "" && existing.Digest != payload {
+		return op, fail("OPERATION_CONFLICT", "operation ID has a different payload")
+	}
 	if e == nil {
 		if existing.Digest != payload {
 			return op, fail("OPERATION_CONFLICT", "operation ID has a different payload")
@@ -77,11 +95,15 @@ func (s *Service) GuardedCreate(ctx context.Context, user string, q CreateReques
 	if head != q.Snapshot {
 		return op, fail("STATE_CHANGED", "managed head changed")
 	}
-	decisions, policySet, e := s.checkPolicies(ctx,user,q)
+	epoch, e := s.policyEpoch(ctx, q.Repository)
 	if e != nil {
 		return op, e
 	}
-	decision:=decisions[q.Policy]
+	decisions, policySet, e := s.checkPolicies(ctx, user, q)
+	if e != nil {
+		return op, e
+	}
+	decision := decisions[q.Policy]
 	snap, e := s.snapshot(ctx, user, q.Repository, head)
 	if e != nil {
 		return op, e
@@ -103,7 +125,7 @@ func (s *Service) GuardedCreate(ctx context.Context, user string, q CreateReques
 	if e != nil {
 		return op, e
 	}
-	commit, e := gitText(ctx, dir, []byte("NotSoFast guarded creation\n"), "commit-tree", tree, "-p", head)
+	commit, e := gitText(ctx, dir, []byte("NotSoFast operation "+digest([]string{user, payload})+"\n"), "commit-tree", tree, "-p", head)
 	if e != nil {
 		return op, e
 	}
@@ -120,14 +142,16 @@ func (s *Service) GuardedCreate(ctx context.Context, user string, q CreateReques
 	if len(fields) != 5 || fields[0] != ":000000" || fields[1] != "100644" || fields[3] != blob || fields[4] != "A" {
 		return op, fail("CANDIDATE_INVALID", "unexpected mode or content")
 	}
-	if _,e=s.manifest(ctx,q.Repository,commit);e!=nil{return op,e}
-	op = Operation{Requester: user, ID: q.Operation, Digest: payload, PolicyVersion: p.Version, PolicyDigest: policySet, Base: head, Candidate: commit, Receipts: q.Receipts, Decision: decision, Decisions:decisions, Outcome: "PUBLISHED"}
+	if _, e = s.manifest(ctx, q.Repository, commit); e != nil {
+		return op, e
+	}
+	op = Operation{Requester: user, ID: q.Operation, Digest: payload, PolicyVersion: p.Version, PolicyDigest: policySet, Base: head, Candidate: commit, Receipts: q.Receipts, Decision: decision, Decisions: decisions, Outcome: "PUBLISHED"}
 	body, _ := json.Marshal(op)
 	metaBlob, e := gitText(ctx, dir, body, "hash-object", "-w", "--stdin")
 	if e != nil {
 		return Operation{}, e
 	}
-	metaTree, e := gitText(ctx, dir, []byte("100644 blob "+metaBlob+"\toperation.json\x00"), "mktree", "-z")
+	metaTree, e := gitText(ctx, dir, []byte("100644 blob "+metaBlob+"\toperation.json\x00100644 blob "+epoch+"\tpolicy.json\x00"), "mktree", "-z")
 	if e != nil {
 		return Operation{}, e
 	}
@@ -136,19 +160,25 @@ func (s *Service) GuardedCreate(ctx context.Context, user string, q CreateReques
 		return Operation{}, e
 	}
 	// An immutable intent pins the candidate before the final reference transaction.
-	if _,e=git(ctx,dir,[]byte("create "+intentRef(user,q.Operation)+" "+metaCommit+"\n"),"update-ref","--stdin");e!=nil{return Operation{},fail("UNRESOLVED","intent could not be confirmed")}
-	tx := "start\nupdate " + branch + " " + commit + " " + head + "\ncreate " + operationRef(user, q.Operation) + " " + metaCommit + "\nprepare\ncommit\n"
+	if _, e = git(ctx, dir, []byte("create "+intentRef(user, q.Operation)+" "+metaCommit+"\n"), "update-ref", "--stdin"); e != nil {
+		return Operation{}, fail("UNRESOLVED", "intent could not be confirmed")
+	}
+	tx := "start\nupdate " + branch + " " + commit + " " + head + "\ncreate " + operationRef(user, q.Operation) + " " + metaCommit + "\nverify " + policyRef + " " + epoch + "\nprepare\ncommit\n"
 	if _, e = git(ctx, dir, []byte(tx), "update-ref", "--stdin"); e != nil {
 		recovered, err := s.Operation(context.WithoutCancel(ctx), user, q.Repository, q.Operation)
 		if err == nil && recovered.Digest == payload {
 			return recovered, nil
 		}
-		if Code(err) == "UNRESOLVED" {
-			return Operation{}, err
-		}
+		recoveryErr := err
 		newHead, err := s.Head(context.WithoutCancel(ctx), user, q.Repository)
 		if err == nil && newHead != head {
 			return Operation{}, fail("STATE_CHANGED", "conditional publication failed")
+		}
+		if _, err = s.policyEpoch(context.WithoutCancel(ctx), q.Repository); Code(err) == "POLICY_CHANGED" {
+			return Operation{}, err
+		}
+		if Code(recoveryErr) == "UNRESOLVED" {
+			return Operation{}, recoveryErr
 		}
 		return Operation{}, fail("UNRESOLVED", "publication could not be confirmed; inspect operation before retrying")
 	}

@@ -95,8 +95,7 @@ type Stats struct {
 	ManifestNS   int64 `json:"manifest_ns"`
 	LookupNS     int64 `json:"lookup_ns"`
 	EvaluationNS int64 `json:"evaluation_ns"`
-	ReceiptNS    int64 `json:"receipt_ns"`
-	TotalNS      int64 `json:"total_ns"`
+	TotalNS      int64 `json:"scan_before_persistence_ns"`
 }
 type Receipt struct {
 	ID          string       `json:"id"`
@@ -149,20 +148,23 @@ type CreateRequest struct {
 	Receipts      []string `json:"receipts"`
 }
 type Operation struct {
-	Decisions map[string]Decision `json:"decisions"`
-	Requester     string   `json:"requester"`
-	ID            string   `json:"id"`
-	Digest        string   `json:"digest"`
-	PolicyVersion string   `json:"policy_version"`
-	PolicyDigest  string   `json:"policy_digest"`
-	Base          string   `json:"base"`
-	Candidate     string   `json:"candidate"`
-	Receipts      []string `json:"receipts"`
-	Decision      Decision `json:"decision"`
-	Outcome       string   `json:"outcome"`
+	Decisions     map[string]Decision `json:"decisions"`
+	Requester     string              `json:"requester"`
+	ID            string              `json:"id"`
+	Digest        string              `json:"digest"`
+	PolicyVersion string              `json:"policy_version"`
+	PolicyDigest  string              `json:"policy_digest"`
+	Base          string              `json:"base"`
+	Candidate     string              `json:"candidate"`
+	Receipts      []string            `json:"receipts"`
+	Decision      Decision            `json:"decision"`
+	Outcome       string              `json:"outcome"`
 }
 
 func validPath(p string) bool {
+	if len(p) > 4096 || strings.Count(p, "/") > 255 {
+		return false
+	}
 	if p == "" || !utf8.ValidString(p) || strings.ContainsAny(p, "\x00\\") || strings.HasPrefix(p, "/") {
 		return false
 	}

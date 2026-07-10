@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -31,7 +32,7 @@ func (b *limitedBuffer) Write(p []byte) (int, error) {
 func git(ctx context.Context, dir string, input []byte, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	base := []string{"-c", "core.hooksPath=" + os.DevNull, "-c", "core.fsmonitor=false", "-c", "gc.auto=0", "-c", "protocol.allow=never", "-c", "core.commitGraph=false", "-C", dir}
+	base := []string{"-c", "core.longpaths=true", "-c", "core.hooksPath=" + os.DevNull, "-c", "core.fsmonitor=false", "-c", "gc.auto=0", "-c", "protocol.allow=never", "-c", "core.commitGraph=false", "-C", dir}
 	cmd := exec.CommandContext(ctx, "git", append(base, args...)...)
 	for _, v := range os.Environ() {
 		k := strings.ToUpper(strings.SplitN(v, "=", 2)[0])
@@ -39,13 +40,16 @@ func git(ctx context.Context, dir string, input []byte, args ...string) ([]byte,
 			cmd.Env = append(cmd.Env, v)
 		}
 	}
-	cmd.Env = append(cmd.Env, "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_NO_REPLACE_OBJECTS=1", "GIT_TERMINAL_PROMPT=0", "GIT_AUTHOR_NAME=NotSoFast", "GIT_AUTHOR_EMAIL=local@notsofast.invalid", "GIT_COMMITTER_NAME=NotSoFast", "GIT_COMMITTER_EMAIL=local@notsofast.invalid")
+	cmd.Env = append(cmd.Env, "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_NO_REPLACE_OBJECTS=1", "GIT_NO_LAZY_FETCH=1", "GIT_ALLOW_PROTOCOL=", "GIT_TERMINAL_PROMPT=0", "GIT_AUTHOR_NAME=NotSoFast", "GIT_AUTHOR_EMAIL=local@notsofast.invalid", "GIT_COMMITTER_NAME=NotSoFast", "GIT_COMMITTER_EMAIL=local@notsofast.invalid")
 	cmd.Stdin = bytes.NewReader(input)
 	out := &limitedBuffer{limit: maxGitOutput}
 	errout := &limitedBuffer{limit: 8192}
 	cmd.Stdout = out
 	cmd.Stderr = errout
 	if e := cmd.Run(); e != nil {
+		if ctx.Err() != nil {
+			return nil, fail("CANCELLED", "Git request cancelled or timed out")
+		}
 		return nil, fail("GIT_ERROR", "Git command failed: "+args[0])
 	}
 	return out.Bytes(), nil
@@ -74,13 +78,24 @@ func (s *Service) Register(ctx context.Context, user, id, commit string) (Snapsh
 		return Snapshot{}, fail("FORBIDDEN", "repository unavailable")
 	}
 	dest := s.repo(id)
+	initialized := false
+	pin := "refs/notsofast/snapshots/" + commit
 	if _, e := os.Stat(dest); e == nil {
 		head, err := gitText(ctx, dest, nil, "rev-parse", branch)
 		if err == nil {
-			if head != commit {
-				return Snapshot{}, fail("ALREADY_REGISTERED", "managed repository already initialized")
+			initialized = true
+			if head == commit {
+				if e = s.activatePolicy(ctx, id); e != nil {
+					return Snapshot{}, e
+				}
+				return s.snapshot(ctx, user, id, commit)
 			}
-			return s.snapshot(ctx, user, id, commit)
+			if pinned, e := gitText(ctx, dest, nil, "rev-parse", "--verify", pin); e == nil && pinned == commit {
+				if e = s.activatePolicy(ctx, id); e != nil {
+					return Snapshot{}, e
+				}
+				return s.snapshot(ctx, user, id, commit)
+			}
 		}
 	}
 	format, e := gitText(ctx, source, nil, "rev-parse", "--show-object-format")
@@ -92,6 +107,28 @@ func (s *Service) Register(ctx context.Context, user, id, commit string) (Snapsh
 	}
 	if _, e = git(ctx, source, nil, "cat-file", "-e", commit+"^{commit}"); e != nil {
 		return Snapshot{}, e
+	}
+	objects, e := git(ctx, source, nil, "rev-list", "--objects", "--no-object-names", commit)
+	if e != nil {
+		return Snapshot{}, e
+	}
+	if bytes.Count(objects, []byte{'\n'}) > 1000000 {
+		return Snapshot{}, fail("LIMIT", "import object-count limit")
+	}
+	sizes, e := git(ctx, source, objects, "cat-file", "--batch-check=%(objectsize)")
+	if e != nil {
+		return Snapshot{}, e
+	}
+	var expanded int64
+	for _, line := range strings.Fields(string(sizes)) {
+		n, err := strconv.ParseInt(line, 10, 64)
+		if err != nil || n < 0 {
+			return Snapshot{}, fail("MANIFEST_ERROR", "incomplete import")
+		}
+		if n > maxGitOutput-expanded {
+			return Snapshot{}, fail("LIMIT", "import expanded-byte limit")
+		}
+		expanded += n
 	}
 	pack, e := git(ctx, source, []byte(commit+"\n"), "pack-objects", "--revs", "--stdout")
 	if e != nil {
@@ -113,7 +150,14 @@ func (s *Service) Register(ctx context.Context, user, id, commit string) (Snapsh
 	if e = s.budget(); e != nil {
 		return Snapshot{}, e
 	}
-	if _, e = git(ctx, dest, []byte("create "+branch+" "+commit+"\n"), "update-ref", "--stdin"); e != nil {
+	tx := "create " + pin + " " + commit + "\n"
+	if !initialized {
+		tx += "create " + branch + " " + commit + "\n"
+	}
+	if _, e = git(ctx, dest, []byte(tx), "update-ref", "--stdin"); e != nil {
+		return Snapshot{}, e
+	}
+	if e = s.activatePolicy(ctx, id); e != nil {
 		return Snapshot{}, e
 	}
 	return snap, nil
@@ -135,7 +179,10 @@ func (s *Service) snapshot(ctx context.Context, user, id, commit string) (Snapsh
 		return Snapshot{}, e
 	}
 	if _, e := git(ctx, s.repo(id), nil, "merge-base", "--is-ancestor", commit, branch); e != nil {
-		return Snapshot{}, fail("BAD_SNAPSHOT", "snapshot is not in managed history")
+		pinned, err := gitText(ctx, s.repo(id), nil, "rev-parse", "--verify", "refs/notsofast/snapshots/"+commit)
+		if err != nil || pinned != commit {
+			return Snapshot{}, fail("BAD_SNAPSHOT", "snapshot is not registered or in managed history")
+		}
 	}
 	return s.manifest(ctx, id, commit)
 }

@@ -64,7 +64,20 @@ func Dispatch(ctx context.Context, s *core.Service, user, op string, body json.R
 		}
 		if op == "verify" {
 			d, e := s.Verify(ctx, user, q)
-			return d, e
+			missing, witnesses := len(d.Missing), len(d.Witnesses)
+			if !expand {
+				if len(d.Missing) > 100 {
+					d.Missing = d.Missing[:100]
+				}
+				if len(d.Witnesses) > 100 {
+					d.Witnesses = d.Witnesses[:100]
+				}
+			}
+			return struct {
+				core.Decision
+				MissingCount int `json:"missing_count"`
+				WitnessCount int `json:"witness_count"`
+			}{d, missing, witnesses}, e
 		}
 		var r core.Receipt
 		var e error
