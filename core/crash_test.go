@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Subprocess stops before publication or immediately after it, without Close.
@@ -40,6 +41,74 @@ func TestCrashHelper(t *testing.T) {
 		os.Exit(94)
 	}
 	os.Exit(72)
+}
+
+func TestTerminationDuringReferenceCommit(t *testing.T) {
+	for _, delay := range []time.Duration{0, time.Millisecond, 20 * time.Millisecond} {
+		t.Run(delay.String(), func(t *testing.T) {
+			s, _, head := fixture(t)
+			ctx := context.Background()
+			r := searchTest(t, s, head, Predicate{"exact_basename", []byte("kill.txt"), 1}, Scope{})
+			q := CreateRequest{Repository: "demo", Snapshot: head, Operation: "kill", Policy: "unique", PolicyVersion: "1", Path: "kill.txt", Content: []byte("ok"), Receipts: []string{r.ID}}
+			op, e := s.GuardedCreate(ctx, "alice", q)
+			if e != nil {
+				t.Fatal(e)
+			}
+			dir := s.repo("demo")
+			meta, e := gitText(ctx, dir, nil, "rev-parse", intentRef("alice", q.Operation))
+			if e != nil {
+				t.Fatal(e)
+			}
+			if _, e = git(ctx, dir, nil, "update-ref", branch, head, op.Candidate); e != nil {
+				t.Fatal(e)
+			}
+			if _, e = git(ctx, dir, nil, "update-ref", "-d", operationRef("alice", q.Operation)); e != nil {
+				t.Fatal(e)
+			}
+			cmd := exec.Command("git", "-c", "core.longpaths=true", "-c", "core.hooksPath="+os.DevNull, "-C", dir, "update-ref", "--stdin")
+			in, _ := cmd.StdinPipe()
+			out, _ := cmd.StdoutPipe()
+			if e = cmd.Start(); e != nil {
+				t.Fatal(e)
+			}
+			defer cmd.Process.Kill()
+			in.Write([]byte("start\nupdate " + branch + " " + op.Candidate + " " + head + "\ncreate " + operationRef("alice", q.Operation) + " " + meta + "\nprepare\n"))
+			scan := bufio.NewScanner(out)
+			prepared := false
+			for scan.Scan() {
+				if strings.Contains(scan.Text(), "prepare: ok") {
+					prepared = true
+					break
+				}
+			}
+			if !prepared {
+				t.Fatal("prepare failed")
+			}
+			if _, e = in.Write([]byte("commit\n")); e != nil {
+				t.Fatal(e)
+			}
+			time.Sleep(delay)
+			cmd.Process.Kill()
+			cmd.Wait()
+			actual, e := s.Head(ctx, "alice", "demo")
+			if e != nil {
+				t.Fatal(e)
+			}
+			got, e := s.Operation(ctx, "alice", "demo", q.Operation)
+			if actual == op.Candidate {
+				if e != nil || got.Candidate != op.Candidate {
+					t.Fatal(got, e)
+				}
+			} else if actual == head {
+				if Code(e) != "UNRESOLVED" {
+					t.Fatal(got, e)
+				}
+			} else {
+				t.Fatal("unexpected head", actual)
+			}
+			t.Logf("kill delay %s: head advanced=%t recovery=%s", delay, actual == op.Candidate, Code(e))
+		})
+	}
 }
 func TestProcessCrashRecovery(t *testing.T) {
 	for _, stage := range []string{"before", "after"} {

@@ -55,6 +55,7 @@ func TestEarlyBenchmark(t *testing.T) {
 			t.Fatal(e)
 		}
 		for _, kind := range []string{"exact_basename", "literal_bytes"} {
+			wholeQueries := map[string]bool{}
 			gitTest(t, src, "checkout", "--detach", head)
 			p := Predicate{Kind: kind, Value: []byte("absent needle"), Version: 1}
 			base := head
@@ -98,7 +99,7 @@ func TestEarlyBenchmark(t *testing.T) {
 					cache = append(cache, kv)
 				}
 				rows.Close()
-				for _, method := range []string{"fresh", "memoization", "receipts"} {
+				for _, method := range []string{"fresh", "memoization", "receipts", "whole_query_memoization"} {
 					if _, e = s.db.Exec("DELETE FROM cache"); e != nil {
 						t.Fatal(e)
 					}
@@ -128,16 +129,21 @@ func TestEarlyBenchmark(t *testing.T) {
 							t.Fatal(e)
 						}
 						v.ManifestNS = time.Since(start).Nanoseconds()
-						for _, ent := range domain(snap, p, Scope{}) {
+						entries := domain(snap, p, Scope{})
+						if method == "whole_query_memoization" && wholeQueries[base] {
+							v.Reused = len(entries)
+							entries = nil
+						}
+						for _, ent := range entries {
 							key := ""
 							ts := time.Now()
 							hit := false
-							if method == "memoization" {
+							if method != "fresh" {
 								key = s.cacheKey("bench", "bench", p, ent)
 								_, hit = s.lookup(ctx, key)
 							}
 							v.LookupNS += time.Since(ts).Nanoseconds()
-							if method == "memoization" && hit {
+							if method != "fresh" && hit {
 								v.Reused++
 								continue
 							}
@@ -147,11 +153,14 @@ func TestEarlyBenchmark(t *testing.T) {
 							}
 							v.Bytes += n
 							v.Evaluated++
-							if method == "memoization" {
+							if method != "fresh" {
 								if e = s.cache(ctx, key, ev.Result); e != nil {
 									t.Fatal(e)
 								}
 							}
+						}
+						if method == "whole_query_memoization" {
+							wholeQueries[base] = true
 						}
 					}
 					v.TotalNS = time.Since(start).Nanoseconds()

@@ -60,8 +60,12 @@ func TestPoliciesAndRecovery(t *testing.T) {
 	s, _, head := fixture(t)
 	ctx := context.Background()
 	s.cfg.Policies["marker"] = Policy{Version: "1", Kind: "literal_bytes", Marker: []byte("owned: xyz"), MaxBytes: 100}
+	if e := s.activatePolicy(ctx, "demo"); e != nil {
+		t.Fatal(e)
+	}
 	r := searchTest(t, s, head, Predicate{"literal_bytes", []byte("owned: xyz"), 1}, Scope{})
-	q := CreateRequest{Repository: "demo", Snapshot: head, Operation: "marker", Policy: "marker", PolicyVersion: "1", Path: "sub/new.txt", Content: []byte("owned: xyz"), Receipts: []string{r.ID}}
+	names := searchTest(t, s, head, Predicate{"exact_basename", []byte("new.txt"), 1}, Scope{})
+	q := CreateRequest{Repository: "demo", Snapshot: head, Operation: "marker", Policy: "marker", PolicyVersion: "1", Path: "sub/new.txt", Content: []byte("owned: xyz"), Receipts: []string{r.ID, names.ID}}
 	bad := q
 	bad.PolicyVersion = "0"
 	if _, e := s.GuardedCreate(ctx, "alice", bad); Code(e) != "POLICY_CHANGED" {
