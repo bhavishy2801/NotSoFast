@@ -27,7 +27,7 @@ def git(directory, *args):
 
 
 @contextmanager
-def environment():
+def environment(unique_scope=None):
     binary = Path(os.environ.get("NSF_BIN", str(Path(__file__).resolve().parents[1] / ".tools" / ("nsf.exe" if os.name == "nt" else "nsf")))).resolve()
     with tempfile.TemporaryDirectory(prefix="nsf-demo-") as directory:
         root = Path(directory)
@@ -45,8 +45,8 @@ def environment():
         config = root / "config.json"
         config.write_text(json.dumps({"root": str(root / "state"), "repositories": {"demo": str(source)},
                           "principals": {"alice": {"repositories": ["demo"], "write": True}, "outsider": {"repositories": []}},
-                          "policies": {"unique": {"version": "1", "kind": "exact_basename", "max_bytes": 4096},
-                                       "marker": {"version": "1", "kind": "literal_bytes", "marker": base64.b64encode(b"owned: demo").decode(), "max_bytes": 4096}},
+                          "policies": {"unique": {"version": "1", "kind": "exact_basename", "scope": unique_scope or {}, "max_bytes": 4096},
+                                       "marker": {"version": "1", "kind": "literal_bytes", "destination_prefix": "markers", "marker": base64.b64encode(b"owned: demo").decode(), "max_bytes": 4096}},
                           "tokens": {token: "alice", "outsider-token-for-demo-only": "outsider"}}))
         with socket.socket() as sock:
             sock.bind(("127.0.0.1", 0))

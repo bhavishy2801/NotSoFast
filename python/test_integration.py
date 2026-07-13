@@ -39,6 +39,13 @@ class Integration(unittest.TestCase):
             self.assertIn("guarded_create", [t["name"] for t in replies[1]["result"]["tools"]])
             self.assertEqual(replies[2]["result"]["structuredContent"]["outcome"], "SUPPORTED")
             self.assertEqual(replies[3]["result"]["structuredContent"]["outcome"], "PUBLISHED")
+            env.process.terminate()
+            env.process.wait(timeout=10)
+            binary = os.environ.get("NSF_BIN", str(Path(__file__).resolve().parents[1] / ".tools" / ("nsf.exe" if os.name == "nt" else "nsf")))
+            cli = subprocess.run([binary, "-config", str(env.source.parent / "config.json"), "-user", "alice", "head"],
+                                 input=json.dumps({"repository": "demo"}), text=True, capture_output=True, timeout=15)
+            self.assertEqual(cli.returncode, 0, cli.stderr)
+            self.assertEqual(json.loads(cli.stdout)["snapshot"], replies[3]["result"]["structuredContent"]["candidate"])
 
 
 if __name__ == "__main__":
