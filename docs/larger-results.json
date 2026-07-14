@@ -1,0 +1,26 @@
+[
+  {
+    "entries": 4096,
+    "method": "fresh_cold",
+    "total_ns": 347521000
+  },
+  {
+    "entries": 4096,
+    "method": "memoization_cold",
+    "total_ns": 2287145700
+  },
+  {
+    "entries": 4096,
+    "method": "receipts_cold",
+    "stats": {
+      "evaluated": 4096,
+      "reused": 0,
+      "bytes": 0,
+      "manifest_ns": 306646300,
+      "lookup_ns": 50142200,
+      "evaluation_ns": 0,
+      "scan_before_persistence_ns": 2282120400
+    },
+    "total_ns": 2293743900
+  }
+]

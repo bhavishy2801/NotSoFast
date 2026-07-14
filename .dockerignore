@@ -1,0 +1,6 @@
+.tools
+.state
+.git
+docs
+python
+**/__pycache__

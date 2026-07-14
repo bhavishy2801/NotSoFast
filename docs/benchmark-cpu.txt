@@ -1,0 +1,74 @@
+File: core.test.exe
+Build ID: C:\Users\bhavi\AppData\Local\Temp\go-build3350694461\b001\core.test.exe2026-10-05 09:03:55.8768243 +0530 IST
+Type: cpu
+Time: 2026-10-05 09:03:56 IST
+Duration: 392.79s, Total samples = 922.69s (234.91%)
+Showing nodes accounting for 916.44s, 99.32% of 922.69s total
+Dropped 603 nodes (cum <= 4.61s)
+      flat  flat%   sum%        cum   cum%
+   916.08s 99.28% 99.28%    916.43s 99.32%  runtime.cgocall
+     0.07s 0.0076% 99.29%     37.55s  4.07%  os.stat
+     0.04s 0.0043% 99.30%    897.74s 97.30%  syscall.SyscallN
+     0.04s 0.0043% 99.30%    897.70s 97.29%  syscall.syscalln
+     0.03s 0.0033% 99.30%     37.59s  4.07%  os/exec.chkStat
+     0.03s 0.0033% 99.31%     37.75s  4.09%  os/exec.findExecutable
+     0.02s 0.0022% 99.31%     40.44s  4.38%  os.StartProcess
+     0.02s 0.0022% 99.31%     36.77s  3.99%  syscall.GetFileAttributesEx
+     0.01s 0.0011% 99.31%     18.72s  2.03%  database/sql.(*DB).exec
+     0.01s 0.0011% 99.31%     18.67s  2.02%  database/sql.(*DB).execDC
+     0.01s 0.0011% 99.31%     18.65s  2.02%  database/sql.(*DB).execDC.func2
+     0.01s 0.0011% 99.32%     18.38s  1.99%  github.com/mattn/go-sqlite3._Cfunc__sqlite3_step_row_internal
+     0.01s 0.0011% 99.32%    541.18s 58.65%  internal/poll.(*FD).execIO
+     0.01s 0.0011% 99.32%    351.75s 38.12%  notsofast/core.git
+     0.01s 0.0011% 99.32%     37.74s  4.09%  os/exec.CommandContext
+     0.01s 0.0011% 99.32%     37.92s  4.11%  os/exec.lookPathExts
+     0.01s 0.0011% 99.32%     40.38s  4.38%  syscall.StartProcess
+     0.01s 0.0011% 99.32%    278.45s 30.18%  syscall.WaitForSingleObject
+     0.01s 0.0011% 99.32%    539.33s 58.45%  syscall.readFile
+         0     0% 99.32%    539.60s 58.48%  bytes.(*Buffer).ReadFrom
+         0     0% 99.32%      6.74s  0.73%  database/sql.(*DB).Exec (inline)
+         0     0% 99.32%     18.72s  2.03%  database/sql.(*DB).ExecContext
+         0     0% 99.32%     18.72s  2.03%  database/sql.(*DB).ExecContext.func1
+         0     0% 99.32%     18.82s  2.04%  database/sql.(*DB).retry
+         0     0% 99.32%     18.64s  2.02%  database/sql.ctxDriverExec
+         0     0% 99.32%     18.78s  2.04%  database/sql.withLock
+         0     0% 99.32%     18.64s  2.02%  github.com/mattn/go-sqlite3.(*SQLiteConn).ExecContext
+         0     0% 99.32%     18.64s  2.02%  github.com/mattn/go-sqlite3.(*SQLiteConn).exec
+         0     0% 99.32%     18.41s  2.00%  github.com/mattn/go-sqlite3.(*SQLiteStmt).exec
+         0     0% 99.32%     18.41s  2.00%  github.com/mattn/go-sqlite3.(*SQLiteStmt).execSync
+         0     0% 99.32%     18.38s  1.99%  github.com/mattn/go-sqlite3.(*SQLiteStmt).execSync.func3 (inline)
+         0     0% 99.32%    539.41s 58.46%  internal/poll.(*FD).Read
+         0     0% 99.32%    539.33s 58.45%  internal/poll.(*FD).Read.func1
+         0     0% 99.32%    541.27s 58.66%  io.Copy (inline)
+         0     0% 99.32%    541.27s 58.66%  io.copyBuffer
+         0     0% 99.32%     68.41s  7.41%  notsofast/core.(*Service).Search
+         0     0% 99.32%    326.30s 35.36%  notsofast/core.(*Service).blob
+         0     0% 99.32%     12.07s  1.31%  notsofast/core.(*Service).cache
+         0     0% 99.32%    326.30s 35.36%  notsofast/core.(*Service).evaluate
+         0     0% 99.32%     18.12s  1.96%  notsofast/core.(*Service).manifest
+         0     0% 99.32%     68.41s  7.41%  notsofast/core.(*Service).search
+         0     0% 99.32%     22.01s  2.39%  notsofast/core.(*Service).snapshot
+         0     0% 99.32%    378.14s 40.98%  notsofast/core.TestEarlyBenchmark
+         0     0% 99.32%      6.53s  0.71%  notsofast/core.gitTest
+         0     0% 99.32%    171.69s 18.61%  notsofast/core.gitText
+         0     0% 99.32%    539.42s 58.46%  os.(*File).Read
+         0     0% 99.32%    539.60s 58.48%  os.(*File).WriteTo
+         0     0% 99.32%    539.41s 58.46%  os.(*File).read (inline)
+         0     0% 99.32%    278.86s 30.22%  os.(*Process).Wait (inline)
+         0     0% 99.32%    278.86s 30.22%  os.(*Process).wait
+         0     0% 99.32%     37.56s  4.07%  os.Stat
+         0     0% 99.32%    539.60s 58.48%  os.genericWriteTo
+         0     0% 99.32%     40.41s  4.38%  os.startProcess
+         0     0% 99.32%     37.55s  4.07%  os.statNolog (inline)
+         0     0% 99.32%      6.28s  0.68%  os/exec.(*Cmd).CombinedOutput
+         0     0% 99.32%    319.93s 34.67%  os/exec.(*Cmd).Run
+         0     0% 99.32%     41.07s  4.45%  os/exec.(*Cmd).Start
+         0     0% 99.32%    541.81s 58.72%  os/exec.(*Cmd).Start.func2
+         0     0% 99.32%    278.86s 30.22%  os/exec.(*Cmd).Wait
+         0     0% 99.32%    540.06s 58.53%  os/exec.(*Cmd).writerDescriptor.func1
+         0     0% 99.32%     37.96s  4.11%  os/exec.Command
+         0     0% 99.32%     37.94s  4.11%  os/exec.LookPath (inline)
+         0     0% 99.32%     37.94s  4.11%  os/exec.lookPath
+         0     0% 99.32%     39.66s  4.30%  syscall.CreateProcess
+         0     0% 99.32%    539.33s 58.45%  syscall.ReadFile (inline)
+         0     0% 99.32%    378.25s 40.99%  testing.tRunner

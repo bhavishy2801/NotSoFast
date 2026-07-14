@@ -1,0 +1,23 @@
+[
+  {
+    "mode": "no_cross_snapshot_reuse",
+    "total_ns": 1205900500,
+    "evaluated": 5,
+    "reused": 0,
+    "outcome": "REFUTED"
+  },
+  {
+    "mode": "no_composition",
+    "total_ns": 714335600,
+    "evaluated": 1,
+    "reused": 4,
+    "outcome": "REFUTED"
+  },
+  {
+    "mode": "full",
+    "total_ns": 1535994400,
+    "evaluated": 1,
+    "reused": 4,
+    "outcome": "REFUTED"
+  }
+]

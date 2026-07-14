@@ -1,0 +1,9 @@
+{
+  "root": "/state",
+  "repositories": {"demo": "/source"},
+  "principals": {"local": {"repositories": ["demo"], "write": true}},
+  "policies": {
+    "unique": {"version": "1", "kind": "exact_basename", "max_bytes": 65536},
+    "marker": {"version": "1", "kind": "literal_bytes", "destination_prefix": "markers", "marker": "b3duZWQ6IGRlbW8=", "max_bytes": 65536}
+  }
+}

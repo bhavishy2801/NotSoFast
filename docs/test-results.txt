@@ -1,0 +1,94 @@
+?   	notsofast/cmd/nsf	[no test files]
+=== RUN   TestAblations
+    ablation_test.go:13: explicit benchmark only
+--- SKIP: TestAblations (0.00s)
+=== RUN   TestConcurrentAndConflict
+--- PASS: TestConcurrentAndConflict (6.57s)
+=== RUN   TestPoliciesAndRecovery
+--- PASS: TestPoliciesAndRecovery (9.93s)
+=== RUN   TestEarlyBenchmark
+    benchmark_test.go:18: explicit benchmark only
+--- SKIP: TestEarlyBenchmark (0.00s)
+=== RUN   TestCacheCorruptionCannotApprove
+--- PASS: TestCacheCorruptionCannotApprove (2.18s)
+=== RUN   TestRenamesDeletesTypesAndUnusualPaths
+--- PASS: TestRenamesDeletesTypesAndUnusualPaths (8.63s)
+=== RUN   TestAllEvidenceValidatedBeforeWitness
+--- PASS: TestAllEvidenceValidatedBeforeWitness (2.32s)
+=== RUN   TestIncompleteAndPublication
+--- PASS: TestIncompleteAndPublication (7.05s)
+=== RUN   TestCrashHelper
+--- PASS: TestCrashHelper (0.00s)
+=== RUN   TestTerminationDuringReferenceCommit
+=== RUN   TestTerminationDuringReferenceCommit/0s
+    crash_test.go:109: kill delay 0s: head advanced=true recovery=
+=== RUN   TestTerminationDuringReferenceCommit/1ms
+    crash_test.go:109: kill delay 1ms: head advanced=true recovery=
+=== RUN   TestTerminationDuringReferenceCommit/20ms
+    crash_test.go:109: kill delay 20ms: head advanced=true recovery=
+--- PASS: TestTerminationDuringReferenceCommit (13.36s)
+    --- PASS: TestTerminationDuringReferenceCommit/0s (4.69s)
+    --- PASS: TestTerminationDuringReferenceCommit/1ms (4.41s)
+    --- PASS: TestTerminationDuringReferenceCommit/20ms (4.26s)
+=== RUN   TestProcessCrashRecovery
+=== RUN   TestProcessCrashRecovery/before
+=== RUN   TestProcessCrashRecovery/after
+--- PASS: TestProcessCrashRecovery (9.15s)
+    --- PASS: TestProcessCrashRecovery/before (4.40s)
+    --- PASS: TestProcessCrashRecovery/after (4.75s)
+=== RUN   TestGitPreparedTransactionTermination
+--- PASS: TestGitPreparedTransactionTermination (1.64s)
+=== RUN   TestEmptySHA256Manifest
+--- PASS: TestEmptySHA256Manifest (3.54s)
+=== RUN   TestCompositionAndIntegrity
+--- PASS: TestCompositionAndIntegrity (4.27s)
+=== RUN   TestScopesPredicatesAndCancellation
+--- PASS: TestScopesPredicatesAndCancellation (6.62s)
+=== RUN   TestRefreshAgainstIndependentOracle
+--- PASS: TestRefreshAgainstIndependentOracle (5.85s)
+=== RUN   TestMissingObjectAndEviction
+--- PASS: TestMissingObjectAndEviction (2.05s)
+=== RUN   TestImportLaterSnapshotKeepsManagedHead
+--- PASS: TestImportLaterSnapshotKeepsManagedHead (4.27s)
+=== RUN   TestLargerFilenameWorkload
+    large_benchmark_test.go:15: explicit benchmark only
+--- SKIP: TestLargerFilenameWorkload (0.00s)
+=== RUN   TestSingleInstanceAndStorageLimit
+--- PASS: TestSingleInstanceAndStorageLimit (1.66s)
+=== RUN   TestCandidateCannotExceedManifestLimit
+--- PASS: TestCandidateCannotExceedManifestLimit (3.28s)
+=== RUN   TestCandidateIdentityBindsOperation
+--- PASS: TestCandidateIdentityBindsOperation (6.20s)
+=== RUN   TestCannotSelectWeakerPolicy
+--- PASS: TestCannotSelectWeakerPolicy (3.08s)
+=== RUN   TestActivePolicyEpoch
+--- PASS: TestActivePolicyEpoch (2.07s)
+=== RUN   TestIntentRecoversMissingOperationReference
+--- PASS: TestIntentRecoversMissingOperationReference (5.15s)
+=== RUN   TestRemovedRepositoryRevokesEpoch
+--- PASS: TestRemovedRepositoryRevokesEpoch (1.71s)
+=== RUN   TestRegistrationRepairsMissingEpoch
+--- PASS: TestRegistrationRepairsMissingEpoch (1.99s)
+=== RUN   FuzzScopeBoundaries
+=== RUN   FuzzScopeBoundaries/seed#0
+=== RUN   FuzzScopeBoundaries/seed#1
+=== RUN   FuzzScopeBoundaries/seed#2
+=== RUN   FuzzScopeBoundaries/seed#3
+=== RUN   FuzzScopeBoundaries/seed#4
+=== RUN   FuzzScopeBoundaries/seed#5
+--- PASS: FuzzScopeBoundaries (0.00s)
+    --- PASS: FuzzScopeBoundaries/seed#0 (0.00s)
+    --- PASS: FuzzScopeBoundaries/seed#1 (0.00s)
+    --- PASS: FuzzScopeBoundaries/seed#2 (0.00s)
+    --- PASS: FuzzScopeBoundaries/seed#3 (0.00s)
+    --- PASS: FuzzScopeBoundaries/seed#4 (0.00s)
+    --- PASS: FuzzScopeBoundaries/seed#5 (0.00s)
+PASS
+ok  	notsofast/core	114.603s
+=== RUN   TestStrictDispatch
+--- PASS: TestStrictDispatch (0.10s)
+=== RUN   TestHTTPAuthenticationAndBounds
+2026/10/05 09:38:32 INFO request reason=FORBIDDEN duration_ms=0
+--- PASS: TestHTTPAuthenticationAndBounds (0.14s)
+PASS
+ok  	notsofast/protocol	2.398s

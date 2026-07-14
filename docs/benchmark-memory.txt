@@ -1,0 +1,123 @@
+File: core.test.exe
+Build ID: C:\Users\bhavi\AppData\Local\Temp\go-build3350694461\b001\core.test.exe2026-10-05 09:03:55.8768243 +0530 IST
+Type: alloc_space
+Time: 2026-10-05 09:10:29 IST
+Showing nodes accounting for 688.42MB, 95.64% of 719.81MB total
+Dropped 120 nodes (cum <= 3.60MB)
+      flat  flat%   sum%        cum   cum%
+  132.02MB 18.34% 18.34%   132.02MB 18.34%  syscall.UTF16FromString
+   65.51MB  9.10% 27.44%   237.03MB 32.93%  os/exec.findExecutable
+   65.21MB  9.06% 36.50%    65.21MB  9.06%  syscall.envSorted.func1
+   61.30MB  8.52% 45.02%    61.30MB  8.52%  bytes.growSlice
+   59.61MB  8.28% 53.30%   129.33MB 17.97%  syscall.createEnvBlock
+   42.50MB  5.90% 59.20%   171.52MB 23.83%  os.stat
+   40.54MB  5.63% 64.84%    40.54MB  5.63%  syscall.UTF16ToString
+   30.59MB  4.25% 69.08%    39.59MB  5.50%  os/exec.dedupEnvCase
+   25.03MB  3.48% 72.56%   581.10MB 80.73%  notsofast/core.git
+   24.08MB  3.34% 75.91%    33.59MB  4.67%  syscall.Getenv
+   14.50MB  2.01% 77.92%    14.50MB  2.01%  strings.genSplit
+   13.51MB  1.88% 79.80%    13.51MB  1.88%  path/filepath.splitList
+   11.01MB  1.53% 81.33%    42.54MB  5.91%  syscall.Environ
+   10.50MB  1.46% 82.79%    10.50MB  1.46%  internal/bytealg.MakeNoZero
+    9.51MB  1.32% 84.11%     9.51MB  1.32%  strings.(*Builder).WriteString (inline)
+    8.03MB  1.12% 85.22%   650.17MB 90.33%  notsofast/core.TestEarlyBenchmark
+    7.50MB  1.04% 86.27%     7.50MB  1.04%  os.newFile
+       7MB  0.97% 87.24%   200.92MB 27.91%  os/exec.(*Cmd).Start
+       7MB  0.97% 88.21%        7MB  0.97%  encoding/hex.EncodeToString (inline)
+    5.60MB  0.78% 88.99%     5.60MB  0.78%  slices.Grow[go.shape.[]uint8,go.shape.uint8] (inline)
+    5.50MB  0.76% 89.75%     5.50MB  0.76%  os/exec.pathExt-range1 (inline)
+    5.04MB   0.7% 90.45%     5.04MB   0.7%  bytes.Clone (inline)
+    4.79MB  0.67% 91.12%     4.79MB  0.67%  os.init.func1
+    4.51MB  0.63% 91.75%     4.51MB  0.63%  slices.Clone[go.shape.[]string,go.shape.string] (inline)
+       4MB  0.56% 92.30%        4MB  0.56%  syscall.appendEscapeArg
+       4MB  0.56% 92.86%   297.63MB 41.35%  os/exec.Command
+       4MB  0.56% 93.41%        4MB  0.56%  github.com/mattn/go-sqlite3.(*SQLiteStmt).bind
+       2MB  0.28% 93.69%        6MB  0.83%  syscall.makeCmdLine
+       2MB  0.28% 93.97%        8MB  1.11%  github.com/mattn/go-sqlite3.(*SQLiteConn).exec
+       2MB  0.28% 94.25%     5.50MB  0.76%  notsofast/core.(*Service).repo
+       2MB  0.28% 94.52%     7.50MB  1.04%  os/exec.(*Cmd).writerDescriptor
+    1.51MB  0.21% 94.74%    40.72MB  5.66%  notsofast/core.(*Service).manifest
+    1.50MB  0.21% 94.94%       12MB  1.67%  database/sql.(*DB).execDC
+    1.50MB  0.21% 95.15%     5.50MB  0.76%  github.com/mattn/go-sqlite3.(*SQLiteStmt).execSync
+    1.01MB  0.14% 95.29%     8.15MB  1.13%  encoding/json/v2.makeStructArshaler.func2
+       1MB  0.14% 95.43%        6MB  0.83%  notsofast/core.(*Service).lookup
+    0.50MB 0.069% 95.50%        5MB  0.69%  notsofast/core.(*Service).cacheKey
+    0.50MB 0.069% 95.57%   138.83MB 19.29%  syscall.StartProcess
+    0.50MB 0.069% 95.64%     4.50MB  0.63%  notsofast/core.(*Service).cache
+         0     0% 95.64%    62.30MB  8.66%  bytes.(*Buffer).ReadFrom
+         0     0% 95.64%    61.30MB  8.52%  bytes.(*Buffer).grow
+         0     0% 95.64%       10MB  1.39%  database/sql.(*DB).Exec (inline)
+         0     0% 95.64%       12MB  1.67%  database/sql.(*DB).ExecContext
+         0     0% 95.64%       12MB  1.67%  database/sql.(*DB).ExecContext.func1
+         0     0% 95.64%       12MB  1.67%  database/sql.(*DB).exec
+         0     0% 95.64%    10.50MB  1.46%  database/sql.(*DB).execDC.func2
+         0     0% 95.64%    15.50MB  2.15%  database/sql.(*DB).retry
+         0     0% 95.64%        8MB  1.11%  database/sql.ctxDriverExec
+         0     0% 95.64%       13MB  1.81%  database/sql.withLock
+         0     0% 95.64%    15.69MB  2.18%  encoding/json.Marshal (inline)
+         0     0% 95.64%     5.60MB  0.78%  encoding/json/internal/jsonwire.AppendQuote
+         0     0% 95.64%    15.69MB  2.18%  encoding/json/v2.Marshal
+         0     0% 95.64%     8.15MB  1.13%  encoding/json/v2.makeSliceArshaler.func2
+         0     0% 95.64%     5.60MB  0.78%  encoding/json/v2.makeStringArshaler.func1
+         0     0% 95.64%     9.65MB  1.34%  encoding/json/v2.marshalEncode
+         0     0% 95.64%        8MB  1.11%  github.com/mattn/go-sqlite3.(*SQLiteConn).ExecContext
+         0     0% 95.64%     5.50MB  0.76%  github.com/mattn/go-sqlite3.(*SQLiteStmt).exec
+         0     0% 95.64%    62.80MB  8.72%  io.Copy (inline)
+         0     0% 95.64%    62.80MB  8.72%  io.copyBuffer
+         0     0% 95.64%   124.35MB 17.28%  notsofast/core.(*Service).Search
+         0     0% 95.64%   548.52MB 76.20%  notsofast/core.(*Service).blob
+         0     0% 95.64%   548.52MB 76.20%  notsofast/core.(*Service).evaluate
+         0     0% 95.64%   124.35MB 17.28%  notsofast/core.(*Service).search
+         0     0% 95.64%    44.72MB  6.21%  notsofast/core.(*Service).snapshot
+         0     0% 95.64%    22.69MB  3.15%  notsofast/core.digest
+         0     0% 95.64%     5.79MB   0.8%  notsofast/core.dirSize
+         0     0% 95.64%     4.02MB  0.56%  notsofast/core.gitTest
+         0     0% 95.64%   294.09MB 40.86%  notsofast/core.gitText
+         0     0% 95.64%     4.79MB  0.67%  os.(*File).ReadDir
+         0     0% 95.64%    62.30MB  8.66%  os.(*File).WriteTo
+         0     0% 95.64%     4.79MB  0.67%  os.(*File).readdir
+         0     0% 95.64%    42.54MB  5.91%  os.Environ (inline)
+         0     0% 95.64%    31.59MB  4.39%  os.Getenv
+         0     0% 95.64%        7MB  0.97%  os.Pipe
+         0     0% 95.64%     4.79MB  0.67%  os.ReadDir
+         0     0% 95.64%   140.83MB 19.57%  os.StartProcess
+         0     0% 95.64%   171.52MB 23.83%  os.Stat
+         0     0% 95.64%    62.30MB  8.66%  os.genericWriteTo
+         0     0% 95.64%   140.83MB 19.57%  os.startProcess
+         0     0% 95.64%   171.52MB 23.83%  os.statNolog (inline)
+         0     0% 95.64%   202.42MB 28.12%  os/exec.(*Cmd).Run
+         0     0% 95.64%    63.80MB  8.86%  os/exec.(*Cmd).Start.func2
+         0     0% 95.64%     5.50MB  0.76%  os/exec.(*Cmd).childStderr
+         0     0% 95.64%    39.59MB  5.50%  os/exec.(*Cmd).environ
+         0     0% 95.64%    62.80MB  8.72%  os/exec.(*Cmd).writerDescriptor.func1
+         0     0% 95.64%   295.63MB 41.07%  os/exec.CommandContext
+         0     0% 95.64%   293.63MB 40.79%  os/exec.LookPath (inline)
+         0     0% 95.64%   171.52MB 23.83%  os/exec.chkStat
+         0     0% 95.64%    39.59MB  5.50%  os/exec.dedupEnv (inline)
+         0     0% 95.64%        4MB  0.56%  os/exec.lookExtensions
+         0     0% 95.64%   293.63MB 40.79%  os/exec.lookPath
+         0     0% 95.64%   289.63MB 40.24%  os/exec.lookPathExts
+         0     0% 95.64%        8MB  1.11%  os/exec.pathExt
+         0     0% 95.64%    10.50MB  1.46%  path/filepath.Join (inline)
+         0     0% 95.64%    13.51MB  1.88%  path/filepath.SplitList (inline)
+         0     0% 95.64%     5.79MB   0.8%  path/filepath.WalkDir
+         0     0% 95.64%    10.50MB  1.46%  path/filepath.join
+         0     0% 95.64%     5.79MB   0.8%  path/filepath.walkDir
+         0     0% 95.64%     3.68MB  0.51%  runtime/pprof.profileWriter
+         0     0% 95.64%    65.21MB  9.06%  slices.SortFunc[go.shape.[]string,go.shape.string] (inline)
+         0     0% 95.64%     4.50MB  0.63%  slices.choosePivotCmpFunc[go.shape.string]
+         0     0% 95.64%     4.50MB  0.63%  slices.medianAdjacentCmpFunc[go.shape.string] (inline)
+         0     0% 95.64%     4.50MB  0.63%  slices.medianCmpFunc[go.shape.string]
+         0     0% 95.64%     4.50MB  0.63%  slices.order2CmpFunc[go.shape.string] (inline)
+         0     0% 95.64%    60.70MB  8.43%  slices.partialInsertionSortCmpFunc[go.shape.string]
+         0     0% 95.64%    65.21MB  9.06%  slices.pdqsortCmpFunc[go.shape.string]
+         0     0% 95.64%    10.50MB  1.46%  strings.(*Builder).Grow
+         0     0% 95.64%    10.50MB  1.46%  strings.(*Builder).grow
+         0     0% 95.64%    14.50MB  2.01%  strings.SplitN (inline)
+         0     0% 95.64%       10MB  1.39%  strings.ToLower
+         0     0% 95.64%     5.50MB  0.76%  strings.splitSeq.func1 (inline)
+         0     0% 95.64%     6.79MB  0.94%  sync.(*Pool).Get
+         0     0% 95.64%   132.02MB 18.34%  syscall.UTF16PtrFromString (inline)
+         0     0% 95.64%    69.71MB  9.69%  syscall.envSorted
+         0     0% 95.64%    65.21MB  9.06%  syscall.envSorted.func2
+         0     0% 95.64%   650.17MB 90.33%  testing.tRunner

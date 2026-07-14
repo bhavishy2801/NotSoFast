@@ -11,3 +11,14 @@ Architecture: one Go core, local controlled Git subprocesses, SQLite receipts an
 5. Release evidence: six executable demonstrations, fair baselines/ablations, measured results, threat model, protocol, correctness argument, audit and documentation. Record unavailable checks explicitly.
 
 Review focus: path-component scopes; malformed/incompatible receipts before witnesses; empty domains backed by complete manifests; branch/operation partial visibility after interruption; no agent-controlled policy or repository paths. No external publishing or source repository mutation.
+
+## Execution record
+
+- Gates 1–2: actual Git/SQLite core and CLI implemented; early comparison run before HTTP. An experimental fixture carry-over bug was fixed and measurements rerun. Memoization retained; receipt speed hypothesis not established.
+- Gate 3: operation intents, conditional refs, configuration epochs, grants, limits, retention and crash/recovery checks implemented. Independent review found and drove regression fixes for overlapping policies, candidate limits, operation identity, orphan epochs, repository revocation and interrupted registration.
+- Gate 4: shared dispatch, bounded authenticated HTTP, stdlib Python client and stdio MCP implemented and exercised against the real service.
+- Gate 5: six demos, scripted controls, 64-cell matrix, larger filename case, ablations, profiles, audit and docs produced. CI/container definitions supplied; runtime validation unavailable on this host. Model-driver harness tested without an actual model.
+- Ruling: repository-granular access is the first-release access boundary; no path ACLs are claimed. Whole configured repository access determines what gap information may be returned.
+- Ruling: pending unconfirmed intents remain UNRESOLVED; automatic replay/administrative abort is excluded rather than guessing after interruption.
+- Ruling: policy requirements are conjunctive across applicable destinations; caller-selected policy never overrides other rules.
+- Remaining measurement limits: combined-process CPU, peak RSS, physical cold caches and statistical multi-machine variability. No power-loss or universal MCP-host compatibility claim.

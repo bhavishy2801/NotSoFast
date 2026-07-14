@@ -1,0 +1,22 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - run: go vet ./...
+      - run: go test -race ./... -count=1
+      - run: go test ./core -run '^$' -fuzz FuzzScopeBoundaries -fuzztime 5s
+      - run: mkdir -p .tools && go build -o .tools/nsf ./cmd/nsf
+      - run: python python/test_integration.py
+      - run: python python/test_model_harness.py
+      - run: python python/demo.py
+      - run: python python/evaluate.py
+      - run: docker build -t notsofast:test .
