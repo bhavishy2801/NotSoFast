@@ -34,7 +34,11 @@ func TestEarlyBenchmark(t *testing.T) {
 		StorageBytes int64  `json:"storage_bytes"`
 	}
 	var results []row
-	for _, size := range []int{32, 256} {
+	sizes := []int{32, 256}
+	if os.Getenv("NSF_BENCH_SMALL") == "1" {
+		sizes = []int{32}
+	}
+	for _, size := range sizes {
 		src := t.TempDir()
 		gitTest(t, src, "init")
 		for i := 0; i < size; i++ {

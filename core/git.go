@@ -32,15 +32,17 @@ func (b *limitedBuffer) Write(p []byte) (int, error) {
 func git(ctx context.Context, dir string, input []byte, args ...string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	base := []string{"-c", "core.longpaths=true", "-c", "core.hooksPath=" + os.DevNull, "-c", "core.fsmonitor=false", "-c", "gc.auto=0", "-c", "protocol.allow=never", "-c", "core.commitGraph=false", "-C", dir}
+	// The operator explicitly allows these source/state directories, including a read-only container mount with a different owner.
+	base := []string{"-c", "safe.directory=" + dir, "-c", "core.longpaths=true", "-c", "core.hooksPath=" + "/dev/null", "-c", "core.fsmonitor=false", "-c", "gc.auto=0", "-c", "protocol.allow=never", "-c", "core.commitGraph=false", "-C", dir}
 	cmd := exec.CommandContext(ctx, "git", append(base, args...)...)
+	quietProcess(cmd)
 	for _, v := range os.Environ() {
 		k := strings.ToUpper(strings.SplitN(v, "=", 2)[0])
 		if !strings.HasPrefix(k, "GIT_") {
 			cmd.Env = append(cmd.Env, v)
 		}
 	}
-	cmd.Env = append(cmd.Env, "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL="+os.DevNull, "GIT_NO_REPLACE_OBJECTS=1", "GIT_NO_LAZY_FETCH=1", "GIT_ALLOW_PROTOCOL=", "GIT_TERMINAL_PROMPT=0", "GIT_AUTHOR_NAME=NotSoFast", "GIT_AUTHOR_EMAIL=local@notsofast.invalid", "GIT_COMMITTER_NAME=NotSoFast", "GIT_COMMITTER_EMAIL=local@notsofast.invalid")
+	cmd.Env = append(cmd.Env, "GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL="+"/dev/null", "GIT_NO_REPLACE_OBJECTS=1", "GIT_NO_LAZY_FETCH=1", "GIT_ALLOW_PROTOCOL=", "GIT_TERMINAL_PROMPT=0", "GIT_AUTHOR_NAME=NotSoFast", "GIT_AUTHOR_EMAIL=local@notsofast.invalid", "GIT_COMMITTER_NAME=NotSoFast", "GIT_COMMITTER_EMAIL=local@notsofast.invalid")
 	cmd.Stdin = bytes.NewReader(input)
 	out := &limitedBuffer{limit: maxGitOutput}
 	errout := &limitedBuffer{limit: 8192}
@@ -60,6 +62,15 @@ func gitText(ctx context.Context, dir string, input []byte, args ...string) (str
 }
 func (s *Service) repo(id string) string {
 	return filepath.Join(s.cfg.Root, "repos", digest(id)+".git")
+}
+
+// Archive exports an authenticated immutable snapshot using Git's archive rules.
+// Git export-ignore/export-subst attributes apply; the output is bounded like other Git reads.
+func (s *Service) Archive(ctx context.Context, user, id, commit string) ([]byte, error) {
+	if _, err := s.Snapshot(ctx, user, id, commit); err != nil {
+		return nil, err
+	}
+	return git(ctx, s.repo(id), nil, "archive", "--format=zip", commit)
 }
 func (s *Service) Register(ctx context.Context, user, id, commit string) (Snapshot, error) {
 	s.mu.Lock()

@@ -65,7 +65,7 @@ func TestTerminationDuringReferenceCommit(t *testing.T) {
 			if _, e = git(ctx, dir, nil, "update-ref", "-d", operationRef("alice", q.Operation)); e != nil {
 				t.Fatal(e)
 			}
-			cmd := exec.Command("git", "-c", "core.longpaths=true", "-c", "core.hooksPath="+os.DevNull, "-C", dir, "update-ref", "--stdin")
+			cmd := exec.Command("git", "-c", "core.longpaths=true", "-c", "core.hooksPath="+"/dev/null", "-C", dir, "update-ref", "--stdin")
 			in, _ := cmd.StdinPipe()
 			out, _ := cmd.StdoutPipe()
 			if e = cmd.Start(); e != nil {
@@ -164,7 +164,7 @@ func TestGitPreparedTransactionTermination(t *testing.T) {
 		t.Fatal(e)
 	}
 	// Exercise the actual Git transaction protocol; terminate after prepare ACK.
-	cmd := exec.Command("git", "-c", "core.hooksPath="+os.DevNull, "-C", dir, "update-ref", "--stdin")
+	cmd := exec.Command("git", "-c", "core.hooksPath="+"/dev/null", "-C", dir, "update-ref", "--stdin")
 	in, _ := cmd.StdinPipe()
 	out, _ := cmd.StdoutPipe()
 	if e = cmd.Start(); e != nil {
