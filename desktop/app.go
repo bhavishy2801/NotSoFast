@@ -35,6 +35,8 @@ type App struct {
 	source            string
 	cfg               core.Config
 	model             ModelConfig
+	github            *gitHubConnection
+	cloud             cloudState
 	files             http.Handler
 	Quit              func()
 }
@@ -72,13 +74,21 @@ func New(root, token string) (*App, error) {
 		lease.Close()
 		return nil, err
 	}
-	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT); CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY,source TEXT,time TEXT,action TEXT,state TEXT,request BLOB,result BLOB); CREATE TABLE IF NOT EXISTS model_runs(id INTEGER PRIMARY KEY,time TEXT,result BLOB);`); err != nil {
+	if _, err = db.Exec(`CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT); CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY,source TEXT,time TEXT,action TEXT,state TEXT,request BLOB,result BLOB); CREATE TABLE IF NOT EXISTS model_runs(id INTEGER PRIMARY KEY,time TEXT,result BLOB); CREATE TABLE IF NOT EXISTS workspaces(source TEXT PRIMARY KEY,opened TEXT,repository_url TEXT DEFAULT '');`); err != nil {
 		db.Close()
 		lease.Close()
 		return nil, err
 	}
 	sub, _ := fs.Sub(assets, "web")
 	a := &App{Root: root, token: token, db: db, lease: lease, files: http.FileServer(http.FS(sub))}
+	a.github = newGitHub(root)
+	var cloudRaw string
+	if db.QueryRow("SELECT value FROM settings WHERE key='cloud'").Scan(&cloudRaw) == nil {
+		_ = json.Unmarshal([]byte(cloudRaw), &a.cloud.Config)
+		if a.cloud.Config.validate() != nil {
+			a.cloud.Config = CloudConfig{}
+		}
+	}
 	var modelBody string
 	if db.QueryRow("SELECT value FROM settings WHERE key='model'").Scan(&modelBody) == nil {
 		_ = json.Unmarshal([]byte(modelBody), &a.model)
@@ -94,6 +104,9 @@ func New(root, token string) (*App, error) {
 func (a *App) Close() {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	if a.github != nil {
+		a.github.close()
+	}
 	if a.service != nil {
 		a.service.Close()
 		a.service = nil
@@ -147,7 +160,7 @@ func (a *App) demo(ctx context.Context) (string, error) {
 	}
 	return dir, nil
 }
-func (a *App) connect(ctx context.Context, source string, refresh bool) error {
+func (a *App) connect(ctx context.Context, source string, refresh bool) (resultErr error) {
 	abs, err := filepath.Abs(source)
 	if err != nil {
 		return err
@@ -169,6 +182,17 @@ func (a *App) connect(ctx context.Context, source string, refresh bool) error {
 	}
 	key := sha256.Sum256([]byte(abs))
 	root := filepath.Join(a.Root, "workspaces", hex.EncodeToString(key[:16]))
+	_, stateErr := os.Stat(root)
+	newState := os.IsNotExist(stateErr)
+	defer func() {
+		// This exact app-owned hash directory did not exist before this connection attempt.
+		if resultErr != nil && newState {
+			if cleanupErr := os.RemoveAll(root); cleanupErr != nil {
+				resultErr = fmt.Errorf("%w; workspace cleanup failed: %v", resultErr, cleanupErr)
+			}
+		}
+	}()
+
 	cfg := core.Config{Root: root, Repositories: map[string]string{"workspace": abs}, Principals: map[string]core.Principal{"local": {Repositories: []string{"workspace"}, Write: true}}, Policies: map[string]core.Policy{
 		"unique": {Version: "1", Kind: "exact_basename", MaxBytes: 65536},
 		"marker": {Version: "1", Kind: "literal_bytes", DestinationPrefix: "markers", Marker: []byte("owned: demo"), MaxBytes: 65536},
@@ -181,7 +205,19 @@ func (a *App) connect(ctx context.Context, source string, refresh bool) error {
 		s.Close()
 		return err
 	}
-	if _, err = a.db.Exec("INSERT OR REPLACE INTO settings(key,value) VALUES('source',?)", abs); err != nil {
+	tx, err := a.db.Begin()
+	if err != nil {
+		s.Close()
+		return err
+	}
+	defer tx.Rollback()
+	if _, err = tx.Exec("INSERT OR REPLACE INTO settings(key,value) VALUES('source',?)", abs); err == nil {
+		_, err = tx.Exec("INSERT INTO workspaces(source,opened) VALUES(?,?) ON CONFLICT(source) DO UPDATE SET opened=excluded.opened", abs, time.Now().UTC().Format(time.RFC3339))
+	}
+	if err == nil {
+		err = tx.Commit()
+	}
+	if err != nil {
 		s.Close()
 		return err
 	}
@@ -217,6 +253,31 @@ func (a *App) status(ctx context.Context) (any, error) {
 		return nil, err
 	}
 	out := map[string]any{"connected": a.service != nil, "source": a.source, "workspace_id": a.workspaceID(), "events": events, "policies": a.cfg.Policies, "state_root": a.cfg.Root, "version": "0.2.0"}
+	workspaces := []map[string]string{}
+	wr, e := a.db.Query("SELECT source,repository_url FROM workspaces ORDER BY opened DESC LIMIT 20")
+	if e != nil {
+		return nil, e
+	}
+	for wr.Next() {
+		var source, remote string
+		if e = wr.Scan(&source, &remote); e != nil {
+			wr.Close()
+			return nil, e
+		}
+		workspaces = append(workspaces, map[string]string{"source": source, "repository_url": remote})
+		if source == a.source {
+			out["repository_url"] = remote
+		}
+	}
+	e = wr.Err()
+	wr.Close()
+	if e != nil {
+		return nil, e
+	}
+	out["workspaces"] = workspaces
+	out["github"] = a.github.status()
+	out["profile"] = a.profile()
+	out["cloud"] = a.cloudView()
 	safeModel := a.model
 	safeModel.Key = ""
 	out["model"] = safeModel
@@ -272,6 +333,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Untrusted origin", 403)
 		return
 	}
+	if r.URL.Path == "/auth/callback" {
+		a.cloudCallback(w, r)
+		return
+	}
 	if !strings.HasPrefix(r.URL.Path, "/api/") {
 		if r.Method != "GET" && r.Method != "HEAD" {
 			http.Error(w, "Method not allowed", 405)
@@ -299,7 +364,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer a.mu.Unlock()
-	if (strings.HasPrefix(r.URL.Path, "/api/call/") || r.URL.Path == "/api/export") && r.Header.Get("X-NSF-Workspace") != a.workspaceID() {
+	if (strings.HasPrefix(r.URL.Path, "/api/call/") || r.URL.Path == "/api/export" || r.URL.Path == "/api/files" || r.URL.Path == "/api/file") && r.Header.Get("X-NSF-Workspace") != a.workspaceID() {
 		http.Error(w, "Workspace changed in another window. Refresh this window before continuing.", 409)
 		return
 	}
@@ -308,6 +373,113 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var out any
 	var err error
 	switch r.URL.Path {
+	case "/api/profile":
+		var p Profile
+		if err = readJSON(r, &p); err == nil {
+			err = a.saveProfile(p)
+		}
+		if err == nil {
+			out = a.profile()
+		}
+	case "/api/insights":
+		out, err = a.insights()
+	case "/api/cloud/status":
+		out = a.cloudView()
+	case "/api/cloud/configure":
+		var cfg CloudConfig
+		if err = readJSON(r, &cfg); err == nil {
+			err = cfg.validate()
+		}
+		if err == nil {
+			b, _ := json.Marshal(cfg)
+			_, err = a.db.Exec("INSERT OR REPLACE INTO settings(key,value) VALUES('cloud',?)", string(b))
+			if err == nil {
+				a.cloud = cloudState{Config: cfg}
+				out = a.cloudView()
+			}
+		}
+	case "/api/cloud/sign-in":
+		var q struct {
+			Provider string `json:"provider"`
+		}
+		if err = readJSON(r, &q); err == nil {
+			out, err = a.cloudStart(q.Provider)
+		}
+	case "/api/cloud/sign-out":
+		if a.cloud.Session.Access != "" {
+			err = a.cloudRequest(ctx, "POST", "/auth/v1/logout?scope=local", nil, nil, true)
+		}
+		a.cloud.Session = cloudSession{}
+		a.cloud.Flow = ""
+		a.cloud.Verifier = ""
+		out = a.cloudView()
+		// Local sign-out succeeds even offline; the provider session expires normally.
+		err = nil
+	case "/api/cloud/save":
+		out, err = a.cloudSnapshots(ctx, true)
+	case "/api/cloud/list":
+		out, err = a.cloudSnapshots(ctx, false)
+
+	case "/api/files":
+		var q struct {
+			Query  string `json:"query"`
+			Offset int    `json:"offset"`
+		}
+		if err = readJSON(r, &q); err == nil {
+			out, err = a.filesPage(ctx, q.Query, q.Offset)
+		}
+	case "/api/file":
+		var q struct {
+			Path     string `json:"path"`
+			Snapshot string `json:"snapshot"`
+		}
+		if err = readJSON(r, &q); err == nil {
+			if a.service == nil {
+				err = fmt.Errorf("connect a repository first")
+			} else {
+				var content []byte
+				content, err = a.service.ReadFile(ctx, "local", "workspace", q.Snapshot, q.Path)
+				out = map[string]any{"path": q.Path, "snapshot": q.Snapshot, "content": content}
+			}
+		}
+	case "/api/open-browser":
+		err = OpenBrowser("http://" + a.Host + "/#" + a.token)
+		out = map[string]bool{"opened": err == nil}
+	case "/api/github/status":
+		out = a.github.refresh(ctx)
+	case "/api/github/auth-state":
+		out = a.github.status()
+	case "/api/github/sign-in":
+		out, err = a.github.start()
+	case "/api/github/sign-out":
+		err = a.github.disconnect()
+		out = a.github.status()
+	case "/api/github/import":
+		var q struct {
+			URL string `json:"url"`
+		}
+		if err = readJSON(r, &q); err == nil {
+			var source string
+			source, err = a.importGitHub(ctx, q.URL)
+			if err == nil {
+				err = a.connect(ctx, source, false)
+				if err != nil && source != a.source {
+					var count int
+					if a.db.QueryRow("SELECT count(*) FROM workspaces WHERE source=?", source).Scan(&count) == nil && count == 0 && filepath.Dir(source) == filepath.Join(a.Root, "github-repositories") {
+						if cleanupErr := os.RemoveAll(source); cleanupErr != nil {
+							err = fmt.Errorf("%w; could not clean up rejected import: %v", err, cleanupErr)
+						}
+					}
+				}
+			}
+			if err == nil {
+				owner, repo, _ := parseGitHubURL(q.URL)
+				_, err = a.db.Exec("UPDATE workspaces SET repository_url=? WHERE source=?", "https://github.com/"+owner+"/"+repo, a.source)
+			}
+			if err == nil {
+				out, err = a.status(ctx)
+			}
+		}
 	case "/api/status":
 		out, err = a.status(ctx)
 	case "/api/model/discover":

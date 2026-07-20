@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"syscall"
+	"time"
 )
 
 func quiet(c *exec.Cmd) {}
@@ -21,4 +23,11 @@ func OpenWindow(url string) error {
 	}
 	return exec.Command(command, url).Start()
 }
-func ShowError(err error) { fmt.Fprintln(os.Stderr, err) }
+func OpenBrowser(url string) error { return OpenWindow(url) }
+func ShowError(err error)          { fmt.Fprintln(os.Stderr, err) }
+
+func cancelTree(c *exec.Cmd) {
+	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	c.Cancel = func() error { return syscall.Kill(-c.Process.Pid, syscall.SIGKILL) }
+	c.WaitDelay = 6 * time.Second
+}

@@ -17,7 +17,10 @@ EXE = Path(os.environ.get('NSF_DESKTOP_EXE', ROOT / '.tools/NotSoFast-dev.exe'))
 
 def run(channel='msedge'):
     with tempfile.TemporaryDirectory(prefix='ui-', dir=ROOT/'.tools') as temp:
-        process = subprocess.Popen([str(EXE), '-data', temp, '-no-open'], stdout=subprocess.DEVNULL,
+        child_env = os.environ.copy()
+        if os.environ.get('NSF_MINIMAL_PATH') == '1':
+            child_env['PATH'] = os.path.join(os.environ['SystemRoot'], 'System32')
+        process = subprocess.Popen([str(EXE), '-data', temp, '-no-open'], stdout=subprocess.DEVNULL, env=child_env,
                                    creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         try:
             session = Path(temp) / 'session.json'
@@ -33,12 +36,26 @@ def run(channel='msedge'):
                 page = browser.new_page(viewport={'width':1440, 'height':1050}, device_scale_factor=1)
                 errors = []
                 page.on('pageerror', lambda e: errors.append(str(e)))
+                page.goto(info['url'])
+                expect(page.locator('#session-gate')).to_be_visible()
                 page.goto(info['url'] + '/#' + info['token'])
                 expect(page.locator('#busy-bar')).to_be_hidden(timeout=20000)
                 expect(page.locator('#overview-title')).to_be_visible()
                 assert not page.evaluate("location.hash.includes('"+info['token']+"')")
                 page.locator('#try-demo').click()
                 expect(page.locator('#connection')).to_have_class('connection connected', timeout=45000)
+                page.keyboard.press('Control+k')
+                expect(page.locator('#command-dialog')).to_be_visible()
+                page.locator('#command-query').fill('files')
+                page.locator('#command-query').press('Enter')
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=30000)
+                page.locator('#file-query').fill('README')
+                page.locator('#file-search-form button').click()
+                expect(page.locator('#file-list')).to_contain_text('README.md', timeout=30000)
+                expect(page.locator('#busy-bar')).to_be_hidden()
+                page.locator('#file-list .file-row').first.click()
+                expect(page.locator('#preview-content')).to_contain_text('Orbit workspace', timeout=30000)
+                page.locator('#preview-close').click()
                 page.locator('nav [data-page="evidence"]').click()
                 page.locator('#search-scope').fill('src')
                 page.locator('#search-form button').click()
@@ -98,13 +115,57 @@ def run(channel='msedge'):
                 assert page.locator('.orbit-one').evaluate('(e)=>getComputedStyle(e).animationName') == 'none'
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path=str(ROOT/'docs/desktop-mobile.png'), full_page=True, animations='disabled')
+                page.set_viewport_size({'width':1440,'height':1050})
+                page.locator('#appearance-open').click()
+                page.locator('#theme-mode').select_option('dark')
+                page.locator('.scheme-choice').filter(has_text='Iris').click()
+                page.locator('#appearance-save').click()
+                expect(page.locator('#appearance-dialog')).to_be_hidden()
+                expect(page.locator('html')).to_have_attribute('data-mode','dark')
+                expect(page.locator('html')).to_have_attribute('data-scheme','violet')
+                page.reload()
+                expect(page.locator('html')).to_have_attribute('data-mode','dark',timeout=20000)
+                page.screenshot(path=str(ROOT/'docs/desktop-dark.png'),full_page=True,animations='disabled')
+                page.locator('[data-page="account"]').first.click()
+                expect(page.locator('#account-insights')).to_contain_text('Saved workspaces',timeout=10000)
+                expect(page.locator('#busy-bar')).to_be_hidden()
+                page.locator('#profile-name').fill('Saved test profile')
+                page.locator('#profile-form button').click()
+                expect(page.locator('#profile-label')).to_have_text('Saved test profile')
+                expect(page.locator('#cloud-save')).to_be_disabled()
+                page.screenshot(path=str(ROOT/'docs/desktop-account.png'),full_page=True,animations='disabled')
+                page.locator('#appearance-open').click()
+                page.locator('#theme-mode').select_option('light')
+                page.locator('.scheme-choice').filter(has_text='Tidal').click()
+                page.locator('#appearance-save').click()
+                expect(page.locator('#appearance-dialog')).to_be_hidden()
+                page.screenshot(path=str(ROOT/'docs/desktop-ocean.png'),full_page=True,animations='disabled')
+
+                page.locator('#connect-top').click()
+                page.locator('#tab-github').click()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=20000)
+                page.locator('#github-url').fill('https://example.com/owner/repo')
+                page.locator('#github-form button[type="submit"]').click()
+                expect(page.locator('#error-banner')).to_be_visible()
+                expect(page.locator('#error-message')).to_contain_text('GitHub repository URL')
+                expect(page.locator('#busy-bar')).to_be_hidden()
+                page.locator('#dismiss-error').click()
+                if os.environ.get('NSF_GITHUB_INTEGRATION') == '1':
+                    page.locator('#github-url').fill('https://github.com/octocat/Hello-World')
+                    page.locator('#github-form button[type="submit"]').click()
+                    expect(page.locator('#busy-bar')).to_be_hidden(timeout=60000)
+                    expect(page.locator('#workspace-name')).to_contain_text('octocat/hello-world')
+                page.locator('#connect-top').click()
+                page.locator('#tab-github').click()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=20000)
+                page.screenshot(path=str(ROOT/'docs/desktop-github.png'),full_page=True,animations='disabled')
                 assert not errors, errors
                 browser.close()
             request=urllib.request.Request(info['url']+'/api/quit',data=b'{}',headers={'X-NSF-Session':info['token']})
             with urllib.request.urlopen(request,timeout=10) as response:
                 assert response.status == 200
             assert process.wait(timeout=20)==0
-            print(json.dumps({'browser':channel,'result':'PASS','checks':['first run','sample import','partial UNKNOWN','missing REFUTED','composition','duplicate blocked','review','publication','recovery','reload','narrow viewport','reduced motion','no JS errors']}))
+            print(json.dumps({'browser':channel,'result':'PASS','checks':['theme persistence','account insights','profile save','cloud unconfigured state','browser reconnect','command palette','file preview','invalid GitHub URL rejected','first run','sample import','partial UNKNOWN','missing REFUTED','composition','duplicate blocked','review','publication','recovery','reload','narrow viewport','reduced motion','no JS errors']}))
         finally:
             if process.poll() is None:
                 process.terminate()

@@ -3,10 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <title>NotSoFast — Evidence before action</title>
     <link rel="icon" href="/mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/app.css" />
+    <link rel="stylesheet" href="/themes.css" />
     <script src="/app.js" defer></script>
   </head>
   <body>
@@ -114,12 +115,22 @@
               >05</span
             >
           </button>
+          <button
+            data-page="files"
+            class="nav-item"
+            aria-label="Snapshot files"
+          >
+            <svg><use href="#i-folder" /></svg>Snapshot files<span
+              class="nav-key"
+              >06</span
+            >
+          </button>
         </nav>
         <div class="sidebar-bottom">
           <div class="local-card">
             <span class="status-led"></span
             ><strong>Built to stay local.</strong>
-            <p>Your code and evidence stay<br />on this machine.</p>
+            <p>Evidence stays on this computer. Cloud saves are optional.</p>
           </div>
           <button
             data-page="settings"
@@ -131,8 +142,8 @@
           <div class="sidebar-footer">
             <span class="avatar">NS</span>
             <div>
-              <strong>Local operator</strong
-              ><small>Desktop edition · 0.2</small>
+              <strong id="profile-label">Local operator</strong
+              ><small>Desktop edition · 0.3</small>
             </div>
             <button
               id="quit"
@@ -151,6 +162,30 @@
             Workspace <span>/</span> <strong id="page-name">Overview</strong>
           </div>
           <div class="topbar-right">
+            <button
+              id="appearance-open"
+              class="command-trigger"
+              aria-label="Appearance and themes"
+            >
+              ◐ Theme</button
+            ><button data-page="account" class="command-trigger">
+              Account
+            </button>
+            <button
+              id="command-open"
+              class="command-trigger"
+              aria-label="Open command palette"
+            >
+              Jump to… <kbd>Ctrl K</kbd>
+            </button>
+            <button
+              id="open-browser"
+              class="button small subtle"
+              aria-label="Open website in browser"
+              title="Open authenticated website"
+            >
+              Web ↗
+            </button>
             <span id="connection" class="connection"
               ><i></i><span>Not connected</span></span
             ><button
@@ -163,6 +198,51 @@
           </div>
         </header>
         <main id="main" tabindex="-1">
+          <div id="error-banner" class="error-banner" role="alert" hidden>
+            <div>
+              <strong>That didn’t complete.</strong>
+              <p id="error-message"></p>
+            </div>
+            <button id="retry-status" class="button subtle">
+              Refresh workspace</button
+            ><button
+              id="dismiss-error"
+              class="icon-button"
+              aria-label="Dismiss error"
+            >
+              ×
+            </button>
+          </div>
+          <section id="session-gate" class="session-gate" hidden>
+            <img src="/mark.svg" alt="NotSoFast" width="54" height="54" />
+            <p class="eyebrow">YOUR PRIVATE WORKSPACE</p>
+            <h1>Let’s get you connected.</h1>
+            <p>
+              This browser needs a secure launch session. Open
+              <strong>NotSoFast-Web.exe</strong>, or choose
+              <strong>Web ↗</strong> in the desktop app. Both open the complete
+              website with your workspace attached.
+            </p>
+            <details>
+              <summary>I have a secure launch link</summary>
+              <form id="session-form">
+                <label for="session-link">Local launch URL</label
+                ><input
+                  id="session-link"
+                  type="password"
+                  autocomplete="off"
+                  required
+                  placeholder="Paste the link printed by the local launcher"
+                /><button class="button dark" type="submit">
+                  Connect securely
+                </button>
+              </form>
+            </details>
+            <p class="field-note">
+              Keep the app running. Opening an HTML file directly does not start
+              the local service.
+            </p>
+          </section>
           <section
             id="page-overview"
             class="page active"
@@ -555,6 +635,83 @@
             <div class="two-column">
               <section class="panel form-panel">
                 <h3>Repository connection</h3>
+                <div
+                  class="connection-tabs"
+                  role="group"
+                  aria-label="Repository source"
+                >
+                  <button id="tab-local" class="active" type="button">
+                    Local folder</button
+                  ><button id="tab-github" type="button">GitHub URL</button>
+                </div>
+                <div id="github-connect" hidden>
+                  <div class="github-account">
+                    <span class="avatar">GH</span>
+                    <div>
+                      <strong id="github-account-name"
+                        >GitHub, on your terms.</strong
+                      >
+                      <p id="github-account-description">
+                        Public repositories need only a URL.
+                      </p>
+                    </div>
+                    <button
+                      id="github-sign-in"
+                      class="button subtle"
+                      type="button"
+                    >
+                      Sign in</button
+                    ><button
+                      id="github-sign-out"
+                      class="text-button"
+                      type="button"
+                      hidden
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                  <div id="github-auth-box" class="auth-box" hidden>
+                    <p id="github-auth-message"></p>
+                    <strong id="github-device-code"></strong
+                    ><a
+                      id="github-authorize"
+                      class="button dark"
+                      href="https://github.com/login/device"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Continue on GitHub ↗</a
+                    ><button
+                      id="github-cancel"
+                      class="text-button"
+                      type="button"
+                    >
+                      Cancel sign-in
+                    </button>
+                  </div>
+                  <form id="github-form">
+                    <label for="github-url">GitHub repository URL</label
+                    ><input
+                      id="github-url"
+                      type="url"
+                      required
+                      placeholder="https://github.com/owner/repository"
+                      maxlength="2048"
+                    />
+                    <p class="field-note">
+                      Imports the latest committed snapshot into an isolated
+                      local workspace. Private repositories require sign-in.
+                      This never pushes to GitHub.
+                    </p>
+                    <button type="submit" class="button dark">
+                      Import from GitHub<svg><use href="#i-arrow" /></svg>
+                    </button>
+                  </form>
+                  <p class="field-note">
+                    Sign-in uses the official GitHub CLI OAuth flow. GitHub
+                    shows its requested permissions before you authorize.
+                    Credentials stay outside the webpage.
+                  </p>
+                </div>
                 <form id="connect-form">
                   <label for="repository-path">Local Git repository</label>
                   <div class="input-button">
@@ -574,6 +731,9 @@
                     Connect workspace<svg><use href="#i-arrow" /></svg>
                   </button>
                 </form>
+                <div class="divider"></div>
+                <h3>Recent workspaces</h3>
+                <div id="recent-workspaces" class="workspace-list"></div>
                 <div class="divider"></div>
                 <h3>Just exploring?</h3>
                 <p>
@@ -607,6 +767,125 @@
                 <button id="settings-quit" class="button subtle">
                   Quit NotSoFast
                 </button>
+              </section>
+            </div>
+          </section>
+          <section
+            id="page-account"
+            class="page"
+            aria-labelledby="account-title"
+          >
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">YOUR SPACE, YOUR PACE</p>
+                <h1 id="account-title">
+                  Pick up where you left off<span class="accent-text">.</span>
+                </h1>
+                <p>Local by default. Connected when you choose.</p>
+              </div>
+              <span id="account-state" class="badge"
+                >Saved on this computer</span
+              >
+            </div>
+            <div id="account-insights" class="metrics"></div>
+            <div class="two-column">
+              <section class="panel form-panel">
+                <h3>Your local profile</h3>
+                <form id="profile-form">
+                  <label for="profile-name">Display name</label
+                  ><input
+                    id="profile-name"
+                    maxlength="100"
+                    placeholder="Your name"
+                  /><button class="button dark" type="submit">
+                    Save profile
+                  </button>
+                </form>
+                <p class="field-note">
+                  Preferences, bookmarks, drafts, history and workspace progress
+                  persist on this computer. This profile uses your Windows
+                  account, without a separate password.
+                </p>
+                <div class="divider"></div>
+                <h3>Continue your draft</h3>
+                <p id="draft-summary" class="field-note">No saved draft yet.</p>
+                <div class="button-row">
+                  <button id="resume-draft" class="button subtle">
+                    Resume draft</button
+                  ><button id="save-draft" class="button subtle">
+                    Save current draft
+                  </button>
+                </div>
+                <div class="divider"></div>
+                <h3>Repository bookmarks</h3>
+                <button id="bookmark-current" class="button subtle">
+                  Bookmark current GitHub repository
+                </button>
+                <div id="bookmarks" class="workspace-list"></div>
+              </section>
+              <section class="panel form-panel">
+                <h3>Cloud account</h3>
+                <p id="cloud-description" class="field-note">
+                  Optional: sign in to save portable snapshots of preferences,
+                  bookmarks and your draft.
+                </p>
+                <details id="cloud-setup">
+                  <summary>Configure cloud connection</summary>
+                  <form id="cloud-form">
+                    <label for="cloud-url">Supabase project URL</label
+                    ><input
+                      id="cloud-url"
+                      type="url"
+                      placeholder="https://your-project.supabase.co"
+                      required
+                    /><label for="cloud-key"
+                      >Public publishable / anon key</label
+                    ><input
+                      id="cloud-key"
+                      type="password"
+                      autocomplete="off"
+                      required
+                      maxlength="4096"
+                    />
+                    <p class="field-note">
+                      Never use a service-role key or OAuth secret. Apply
+                      cloud/schema.sql and enable the provider in your project
+                      first.
+                    </p>
+                    <button class="button dark" type="submit">
+                      Save connection
+                    </button>
+                  </form>
+                </details>
+                <div class="button-row">
+                  <button id="cloud-github" class="button dark">
+                    Continue with GitHub</button
+                  ><button id="cloud-google" class="button subtle">
+                    Continue with Google</button
+                  ><button id="cloud-signout" class="button subtle" hidden>
+                    Sign out
+                  </button>
+                </div>
+                <p class="field-note">
+                  Cloud sign-in is separate from repository access. Account
+                  tokens stay in memory; sign in again after restarting the app.
+                </p>
+                <div class="divider"></div>
+                <h3>Portable saves</h3>
+                <p class="field-note">
+                  Save explicitly to upload your display name, appearance,
+                  bookmarked GitHub URLs, and draft path/content. Local paths,
+                  model keys, Git data and evidence are excluded. Restore only a
+                  snapshot you choose.
+                </p>
+                <div class="button-row">
+                  <button id="cloud-save" class="button dark" disabled>
+                    Save to cloud</button
+                  ><button id="cloud-list" class="button subtle" disabled>
+                    Find saved work
+                  </button>
+                </div>
+                <div id="cloud-snapshots" class="workspace-list"></div>
               </section>
             </div>
           </section>
@@ -725,6 +1004,53 @@
               </section>
             </div>
           </section>
+          <section id="page-files" class="page" aria-labelledby="files-title">
+            <div class="page-heading">
+              <div>
+                <p class="eyebrow">SEE THE SNAPSHOT BEHIND THE CLAIM</p>
+                <h1 id="files-title">
+                  Every tracked detail<span class="accent-text">.</span>
+                </h1>
+                <p>
+                  Browse immutable entries. Preview content without executing
+                  it.
+                </p>
+              </div>
+              <span class="badge current-snapshot">Connect a workspace</span>
+            </div>
+            <section class="panel">
+              <form id="file-search-form" class="file-toolbar">
+                <svg><use href="#i-search" /></svg
+                ><label for="file-query" class="sr-only"
+                  >Find a tracked path</label
+                ><input
+                  id="file-query"
+                  placeholder="Filter paths, e.g. config or .yaml"
+                  maxlength="4096"
+                /><button type="submit" class="button dark">Find files</button>
+              </form>
+              <div class="file-table-head">
+                <span>TRACKED PATH</span><span>TYPE</span><span>OBJECT</span>
+              </div>
+              <div id="file-list" class="file-list">
+                <div class="empty-state">
+                  <h3>The source of truth.</h3>
+                  <p>
+                    Connect a repository, then find files in its managed
+                    snapshot.
+                  </p>
+                </div>
+              </div>
+              <div class="file-pagination">
+                <span id="file-total">No snapshot loaded</span
+                ><button id="files-prev" class="button subtle" disabled>
+                  Previous</button
+                ><button id="files-next" class="button subtle" disabled>
+                  Next
+                </button>
+              </div>
+            </section>
+          </section>
         </main>
       </div>
     </div>
@@ -732,6 +1058,104 @@
       <span class="spinner"></span><span id="busy-label">Working…</span>
     </div>
     <div id="toast" class="toast" role="status" hidden></div>
+    <dialog id="appearance-dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">MAKE IT YOURS</p>
+          <h3>Set the atmosphere.</h3>
+        </div>
+        <button
+          id="appearance-close"
+          class="icon-button"
+          aria-label="Close appearance"
+        >
+          ×
+        </button>
+      </div>
+      <p class="field-note">
+        Appearance follows you across desktop and browser windows.
+      </p>
+      <label for="theme-mode">Brightness</label
+      ><select id="theme-mode">
+        <option value="system">Match system</option>
+        <option value="light">Daylight</option>
+        <option value="dark">After hours</option></select
+      ><label>Accent collection</label>
+      <div id="scheme-options" class="scheme-grid"></div>
+      <div class="theme-preview">
+        <span class="pill">YOUR NEXT MOVE</span>
+        <h2>Clarity looks good<br />in every color.</h2>
+        <div class="theme-preview-orb"></div>
+      </div>
+      <div class="dialog-actions">
+        <button id="appearance-save" class="button dark">
+          Save appearance
+        </button>
+      </div>
+    </dialog>
+    <dialog id="cloud-restore-dialog">
+      <div class="dialog-head">
+        <h3>Restore this saved profile?</h3>
+        <button
+          id="restore-close"
+          class="icon-button"
+          aria-label="Close restore"
+        >
+          ×
+        </button>
+      </div>
+      <pre id="restore-preview"></pre>
+      <p class="field-note">
+        This replaces your local display name, appearance, bookmarks and saved
+        draft. Repository history and evidence stay unchanged.
+      </p>
+      <div class="dialog-actions">
+        <button id="restore-confirm" class="button dark">
+          Restore this snapshot
+        </button>
+      </div>
+    </dialog>
+    <dialog id="command-dialog" class="command-dialog">
+      <div class="dialog-head">
+        <h3>Where do you want to go?</h3>
+        <button
+          id="command-close"
+          class="icon-button"
+          aria-label="Close command palette"
+        >
+          ×
+        </button>
+      </div>
+      <label for="command-query" class="sr-only">Find an action</label
+      ><input
+        id="command-query"
+        placeholder="Search pages and actions…"
+        autocomplete="off"
+      />
+      <div id="command-list"></div>
+      <p class="field-note">Tab to choose · Enter to open · Esc to close</p>
+    </dialog>
+    <dialog id="preview-dialog">
+      <div class="dialog-head">
+        <div>
+          <h3 id="preview-name"></h3>
+          <p id="preview-meta" class="field-note"></p>
+        </div>
+        <button
+          id="preview-close"
+          class="icon-button"
+          aria-label="Close preview"
+        >
+          ×
+        </button>
+      </div>
+      <pre id="preview-content"></pre>
+      <div class="dialog-actions">
+        <button id="preview-download" class="button subtle">
+          Download file
+        </button>
+      </div>
+    </dialog>
     <dialog id="detail-dialog">
       <div class="dialog-head">
         <h3 id="detail-title">Activity details</h3>

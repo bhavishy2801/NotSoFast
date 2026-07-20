@@ -31,7 +31,9 @@ Exact scoped tracked-tree absence under a trusted scanner/store; conditional sin
 
 ## 6. Unverified items
 
-Docker is unavailable on the development host; container execution and remote CI have not run. No actual model provider/credentials were used; only the provider-neutral harness contract was tested. Combined-process CPU, peak RSS, physical cold-cache runs, statistical latency variability, power-loss behavior and broad MCP-host compatibility remain unverified. Profiles and Go allocation/storage measurements are supplied without mislabeling them as those missing measurements.
+Docker is unavailable on the development host. Earlier remote CI run [37277875527](https://github.com/bhavishy2801/NotSoFast/actions/runs/37277875527) passed at commit `4b906a3`, including image build; newly added runtime/browser CI steps have not been remotely verified. No real-model inference or private-account OAuth authorization was performed. Physical cold-cache runs, power-loss behavior and broad agent-host compatibility remain unverified.
+
+Five repeated 32-file matrices now include Windows Job CPU/process totals and committed-memory peaks, plus sampled aggregate RSS. These are not exact RSS peaks, controlled latency distributions or per-action CPU measurements. See [raw repeated results](repeated-results.json). Official Python MCP SDK interoperability and real Edge/Chrome desktop workflows were exercised locally.
 
 ## 7. Audit and documentation
 
@@ -41,3 +43,16 @@ Docker is unavailable on the development host; container execution and remote CI
 
 - Built a Go/Git/SQLite evidence gateway with exact-scope verification, receipt composition, incremental reuse and authenticated CLI/HTTP/Python/MCP access; validated six model-free end-to-end demonstrations.
 - Implemented conditional Git publication and durable operation recovery with policy epochs; exercised race detection, crash/retry scenarios and a 64-case performance comparison against fresh validation and conventional memoization.
+
+
+## Desktop and browser delivery — October 6
+
+Added an embedded animated local UI, Windows portable executable and browser launcher, secure session reconnect, recent workspaces, GitHub URL imports with official CLI OAuth device flow, safe file preview/download, command palette, evidence composition, guarded publication/recovery, ZIP export, local/provider model setup and isolated model trials. The complete user guide is now in [README](../README.md).
+
+GitHub imports use bounded default-branch history; helper-process cancellation and rejected-import cleanup were reviewed. The frontend is embedded and has no runtime frontend dependencies. Public GitHub import was tested against a real repository. Packaged browser checks use a restricted executable PATH to exercise bundled runtimes.
+
+### Account, theme and installer extension
+
+Added five accent palettes with light/dark/system modes; local profiles, draft persistence, bookmarks and insights; optional Supabase PKCE accounts and explicit portable saves; SQL ownership policies and a configuration guide. Live hosted OAuth/RLS remains pending project configuration. No repository evidence or credentials are uploaded in cloud profile snapshots.
+
+The native Windows installer includes bundled runtimes, Start menu/optional desktop shortcuts, upgrades and an uninstaller that retains app data. Install/upgrade/launch/uninstall and junction rejection passed. The final race suite passed core (135.099s), desktop (32.046s) and protocol (1.930s); vet passed. Browser evidence is in `browser-followup-results.json`. The package is not code-signed.

@@ -25,10 +25,27 @@ Scope: Go core, SQLite store/cache, controlled Git commands, CLI/HTTP, Python cl
 
 Tests use actual Git and SQLite, including independent full evaluation, changed source imports, one-file deltas, policy binding, conflicts, cache/receipt corruption, cancellation, resource rejection, API authentication and subprocess recovery. Python tests connect to the actual compiled service. The latest saved test log and evaluation outputs are linked from [EVALUATION.md](docs/EVALUATION.md).
 
-Process-kill attempts after commit input observed completed publication on this host; partial-ref states were also constructed deterministically to verify recovery. Do not claim every kernel/filesystem interruption was observed. No power-loss guarantee is made. No automated lock cleanup, pending-intent abort API, remote fetch, arbitrary mutation or external publication exists.
+Process-kill attempts after commit input observed completed publication on this host; partial-ref states were also constructed deterministically to verify recovery. Do not claim every kernel/filesystem interruption was observed. No power-loss guarantee is made. No automated lock cleanup, pending-intent abort API, arbitrary mutation or external publication exists. The desktop now imports GitHub HTTPS repositories; the agent-facing core still does not accept arbitrary remote URLs.
 
-Docker Compose and GitHub Actions definitions are supplied. Docker is absent locally, and CI was not remotely triggered. Container execution, image availability on the target machine and Linux CI results remain unverified. Real-model runs are optional and were not performed. The harness requires a provider driver; its transport contract was tested with a non-model script.
+Docker Compose and GitHub Actions definitions are supplied. Docker is absent locally. Earlier remote CI run 37277875527 passed at commit 4b906a3, including image build. The newly added runtime container/browser checks have not run remotely; local container execution remains unverified. Real-model runs are optional and were not performed. The harness requires a provider driver; its transport contract was tested with a non-model script.
 
 The repository permission boundary is whole-repository authorization; path-level ACLs and hostile multitenancy are not implemented. A local same-user CLI/agent can bypass the gateway. Service-created files are ordinary 100644 blobs; symlink targets, submodule contents, LFS payloads and semantic equivalence are outside the authoritative universe.
 
 No unresolved finding above is silently advertised as a stronger guarantee. Remaining limits are explicit product or validation boundaries.
+
+
+## Desktop follow-up — October 6
+
+- Session/workspace capabilities bind browser requests to the active local workspace; stale-window operations fail before dispatch. Secure-link hash changes reconnect an already-open tab.
+- File previews authenticate immutable snapshots, restrict tracked paths and blob types, cap content at 1 MiB and render as text. Symlinks are not followed.
+- GitHub URL parsing accepts only github.com HTTPS owner/repository paths. Official CLI OAuth credentials stay outside browser JavaScript; app-specific configuration is isolated, while OS credential storage remains an upstream CLI behavior.
+- GitHub imports disable hooks, credential helpers and redirects, impose time/size limits, cancel Git helper processes and clean rejected untracked imports. Full default-branch history preserves parent connectivity. The temporary 96 MiB watchdog is sampled and can overshoot before cancellation; it is not a filesystem quota.
+- Desktop metadata has a 64 MiB database-page bound; PENDING operations remain visible beyond the recent completed-event window. Imported workspaces have no aggregate retention policy.
+- Model endpoints require HTTPS except loopback; redirects/proxy use are disabled, keys remain in memory, and trials use separate disposable fixtures. Scripted transport success is not evidence of real-model performance.
+- Packaged Edge/Chrome workflows, real public GitHub import, race tests and independent review supplement the original core checks. Private OAuth approval and hardware power-loss testing remain unverified.
+
+## Account and installer extension
+
+Cloud OAuth uses PKCE S256, expiring one-use callback state, HTTPS Supabase project validation, and server-memory-only tokens. Public configuration rejects service-role/secret keys. Supplied SQL enables per-user row policies; response ownership is also checked locally. The integration contract is tested, while live OAuth and deployed RLS are not yet verified. Cloud saves are explicit and include draft text and GitHub bookmark URLs; they are not end-to-end encrypted.
+
+The installer uses per-user privileges and manifest-based deletion. Review found a junction traversal risk; cleanup now validates path ancestors and the complete installation tree before changes. A real junction regression confirms rejection before deleting files. Same-user concurrent filesystem tampering is not treated as an isolation boundary. Uninstall retains application data, and setup logs failures to `%TEMP%/NotSoFast-Setup.log`. Binaries are unsigned.

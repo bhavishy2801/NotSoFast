@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"notsofast/desktop"
@@ -29,12 +30,24 @@ func run() error {
 	data, _ := os.UserConfigDir()
 	root := flag.String("data", filepath.Join(data, "NotSoFast"), "application data directory")
 	headless := flag.Bool("no-open", false, "serve without opening a window")
+	webMode := flag.Bool("browser", false, "open the authenticated website in your default browser")
 	flag.Parse()
 	// Prefer the bundled, versioned Git distribution if present.
 	exe, _ := os.Executable()
+	if strings.Contains(strings.ToLower(filepath.Base(exe)), "-web") {
+		*webMode = true
+	}
+	open := desktop.OpenWindow
+	if *webMode {
+		open = desktop.OpenBrowser
+	}
 	bundled := filepath.Join(filepath.Dir(exe), "git", "cmd")
 	if _, err := os.Stat(filepath.Join(bundled, "git.exe")); err == nil {
 		os.Setenv("PATH", bundled+string(os.PathListSeparator)+os.Getenv("PATH"))
+	}
+	gh := filepath.Join(filepath.Dir(exe), "github", "bin")
+	if _, err := os.Stat(filepath.Join(gh, "gh.exe")); err == nil {
+		os.Setenv("PATH", gh+string(os.PathListSeparator)+os.Getenv("PATH"))
 	}
 	sessionFile := filepath.Join(*root, "session.json")
 	var old struct {
@@ -53,7 +66,7 @@ func run() error {
 					res.Body.Close()
 					if res.StatusCode == 200 {
 						if !*headless {
-							return desktop.OpenWindow(old.URL + "/#" + old.Token)
+							return open(old.URL + "/#" + old.Token)
 						}
 						return fmt.Errorf("NotSoFast is already running")
 					}
@@ -93,8 +106,8 @@ func run() error {
 	defer os.Remove(sessionFile)
 	go func() { _ = server.Serve(listener) }()
 	if *headless {
-		fmt.Println(url)
-	} else if err = desktop.OpenWindow(url + "/#" + token); err != nil {
+		fmt.Println(url + "/#" + token)
+	} else if err = open(url + "/#" + token); err != nil {
 		server.Close()
 		return err
 	}

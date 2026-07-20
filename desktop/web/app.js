@@ -7,6 +7,8 @@ const names = {
   activity: "Activity",
   settings: "Workspace settings",
   models: "Model lab",
+  files: "Snapshot files",
+  account: "Account & saved work",
 };
 const actionNames = {
   search: "Evidence collected",
@@ -24,6 +26,15 @@ if (/^#[a-f0-9]{64}$/.test(location.hash)) {
   sessionStorage.setItem("nsf-session", token);
   history.replaceState(null, "", location.pathname);
 }
+window.addEventListener("hashchange", () => {
+  if (/^#[a-f0-9]{64}$/.test(location.hash)) {
+    token = location.hash.slice(1);
+    sessionStorage.setItem("nsf-session", token);
+    history.replaceState(null, "", location.pathname);
+    navigate("overview");
+    work("Connecting your browser…", refresh);
+  }
+});
 let state = { events: [], policies: {}, connected: false },
   busy = false,
   claim = null,
@@ -103,6 +114,12 @@ async function api(route, body = {}) {
     );
   }
   const text = await res.text();
+  if (res.status === 401) {
+    showSessionGate();
+    throw new Error(
+      "This browser session is not connected. Use the Web launcher or paste its secure launch link.",
+    );
+  }
   let data;
   try {
     data = JSON.parse(text);
@@ -141,6 +158,8 @@ async function work(label, fn) {
     return await fn();
   } catch (e) {
     toast(e.message, true);
+    $("error-message").textContent = e.message;
+    $("error-banner").hidden = false;
   } finally {
     busy = false;
     requestWorkspace = null;
@@ -162,6 +181,10 @@ function navigate(page) {
   $("page-name").textContent = names[page];
   document.title = "NotSoFast — " + names[page];
   history.replaceState(null, "", "#" + page);
+  if (page === "files" && state.connected && !busy)
+    work("Loading tracked entries…", () => loadFiles(0));
+  if (page === "account" && token && !busy)
+    work("Loading your insights…", loadInsights);
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 document.addEventListener("click", (e) => {
@@ -268,6 +291,8 @@ function update(next) {
     state.source !== next.source ||
     state.snapshot?.commit !== next.snapshot?.commit;
   state = next;
+  if (next.profile) renderProfile(next.profile);
+  if (next.cloud) renderCloud(next.cloud);
   state.events ||= [];
   state.policies ||= {};
   if (changed) {
@@ -276,7 +301,9 @@ function update(next) {
     invalidateReview();
   }
   $("workspace-name").textContent =
-    state.source?.split(/[\\/]/).pop() || "Your workspace";
+    state.repository_url?.replace("https://github.com/", "") ||
+    state.source?.split(/[\\/]/).pop() ||
+    "Your workspace";
   $("workspace-sub").textContent = state.connected
     ? "Managed branch · local"
     : "Local · private";
@@ -342,11 +369,16 @@ function update(next) {
         : " · No API key in this session.");
   }
   renderReceipts();
+  $("session-gate").hidden = true;
+  document.body.classList.remove("session-locked");
+  renderWorkspaces();
+  renderGitHub(state.github || {});
 }
 async function refresh() {
   const next = await api("status");
   const switched = requestWorkspace && next.workspace_id !== requestWorkspace;
   update(next);
+  $("error-banner").hidden = true;
   if (switched)
     throw new Error(
       "Workspace changed in another window. Review the selected repository and start again.",
@@ -942,5 +974,567 @@ $("export-models").onclick = () =>
   });
 $("quit").onclick = quit;
 $("settings-quit").onclick = quit;
+function showSessionGate() {
+  $("session-gate").hidden = false;
+  document.body.classList.add("session-locked");
+}
+$("session-form").onsubmit = (e) => {
+  e.preventDefault();
+  try {
+    const value = $("session-link").value.trim();
+    const link = new URL(value);
+    if (
+      link.protocol !== "http:" ||
+      link.hostname !== "127.0.0.1" ||
+      link.username ||
+      link.password ||
+      !link.port ||
+      !/^#[a-f0-9]{64}$/.test(link.hash)
+    )
+      throw new Error("Use the complete local launch link from NotSoFast.");
+    location.assign(link.href);
+  } catch (e) {
+    toast(e.message, true);
+  }
+};
+$("open-browser").onclick = () =>
+  work("Opening the authenticated website…", async () => {
+    await api("open-browser");
+    toast("Your workspace has opened in the default browser.");
+  });
+$("dismiss-error").onclick = () => ($("error-banner").hidden = true);
+$("retry-status").onclick = () =>
+  work("Reconnecting to your workspace…", refresh);
+function renderWorkspaces() {
+  const target = $("recent-workspaces");
+  target.replaceChildren();
+  for (const item of state.workspaces || []) {
+    const b = node("button", "workspace-choice");
+    b.type = "button";
+    b.append(icon(item.repository_url ? "branch" : "folder"));
+    const text = node("span");
+    text.append(
+      node(
+        "strong",
+        "",
+        item.repository_url?.replace("https://github.com/", "") ||
+          item.source.split(/[\\/]/).pop(),
+      ),
+      node("small", "", item.repository_url || item.source),
+    );
+    b.append(text);
+    if (item.source === state.source) b.append(badge("Active"));
+    b.onclick = () =>
+      work("Opening workspace…", () => connect({ source: item.source }));
+    target.append(b);
+  }
+  if (!target.childElementCount)
+    target.append(
+      node("p", "field-note", "Your connected repositories will appear here."),
+    );
+}
+function connectionTab(tab) {
+  const github = tab === "github";
+  $("tab-github").classList.toggle("active", github);
+  $("tab-local").classList.toggle("active", !github);
+  $("tab-github").setAttribute("aria-pressed", String(github));
+  $("tab-local").setAttribute("aria-pressed", String(!github));
+  $("github-connect").hidden = !github;
+  $("connect-form").hidden = github;
+}
+let authTimer = null;
+function renderGitHub(g) {
+  $("github-account-name").textContent = g.signed_in
+    ? "Connected as " + g.login
+    : "GitHub, on your terms.";
+  $("github-account-description").textContent = g.signed_in
+    ? "Public and authorized private repositories."
+    : "Public repositories need only a URL.";
+  $("github-sign-in").hidden = !!g.signed_in;
+  $("github-sign-out").hidden = !g.signed_in;
+  const pending = ["starting", "authorizing"].includes(g.stage);
+  $("github-auth-box").hidden = !pending && g.stage !== "error";
+  $("github-device-code").textContent = g.code || "Requesting code…";
+  $("github-device-code").hidden = !pending;
+  $("github-authorize").hidden = !g.code;
+  $("github-auth-message").textContent = g.message || "";
+  $("github-cancel").hidden = !pending;
+  if (pending && !authTimer) authTimer = setTimeout(pollGitHub, 2000);
+}
+async function pollGitHub() {
+  authTimer = null;
+  try {
+    renderGitHub(await api("github/auth-state"));
+  } catch {
+    if (!document.body.classList.contains("session-locked"))
+      authTimer = setTimeout(pollGitHub, 3000);
+  }
+}
+$("tab-local").onclick = () => connectionTab("local");
+$("tab-github").onclick = () => {
+  connectionTab("github");
+  work("Checking your GitHub connection…", async () =>
+    renderGitHub(await api("github/status")),
+  );
+};
+$("github-sign-in").onclick = () =>
+  work("Starting GitHub browser sign-in…", async () =>
+    renderGitHub(await api("github/sign-in")),
+  );
+async function disconnectGitHub() {
+  clearTimeout(authTimer);
+  authTimer = null;
+  renderGitHub(await api("github/sign-out"));
+  toast("Disconnected from this app. Existing local workspaces are retained.");
+}
+$("github-sign-out").onclick = () =>
+  work("Disconnecting GitHub…", disconnectGitHub);
+$("github-cancel").onclick = () =>
+  work("Cancelling sign-in…", disconnectGitHub);
+$("github-form").onsubmit = (e) => {
+  e.preventDefault();
+  work("Importing the latest GitHub snapshot…", async () => {
+    const next = await api("github/import", {
+      url: $("github-url").value.trim(),
+    });
+    update(next);
+    navigate("overview");
+    toast("GitHub snapshot imported. No remote changes were made.");
+  });
+};
+let filePage = null,
+  preview = null;
+async function loadFiles(offset) {
+  requireWorkspace();
+  const result = await api("files", {
+    query: $("file-query").value.trim(),
+    offset,
+  });
+  filePage = result;
+  const target = $("file-list");
+  target.replaceChildren();
+  for (const entry of result.entries) {
+    const b = node("button", "file-row");
+    b.type = "button";
+    const name = node("span", "file-name");
+    name.append(
+      icon(entry.type === "tree" ? "folder" : "branch"),
+      node("span", "", entry.path),
+    );
+    b.append(name, badge(entry.type), node("code", "", short(entry.oid)));
+    b.onclick = () => {
+      if (entry.type === "tree") {
+        $("file-query").value = entry.path + "/";
+        work("Loading folder entries…", () => loadFiles(0));
+        return;
+      }
+      work("Reading the immutable file…", async () => {
+        preview = await api("file", {
+          path: entry.path,
+          snapshot: result.snapshot,
+        });
+        const bytes = Uint8Array.from(atob(preview.content), (c) =>
+          c.charCodeAt(0),
+        );
+        $("preview-name").textContent = entry.path;
+        $("preview-meta").textContent =
+          entry.type +
+          " · " +
+          bytes.length.toLocaleString() +
+          " bytes · " +
+          short(result.snapshot);
+        $("preview-content").textContent = bytes.includes(0)
+          ? "Binary file. Download it to inspect its contents."
+          : new TextDecoder().decode(bytes);
+        $("preview-dialog").showModal();
+      });
+    };
+    target.append(b);
+  }
+  if (!result.entries.length) {
+    const empty = node("div", "empty-state");
+    empty.append(
+      node("h3", "", "No matching paths."),
+      node(
+        "p",
+        "",
+        "Try a shorter path fragment. This view includes only tracked entries.",
+      ),
+    );
+    target.append(empty);
+  }
+  $("file-total").textContent = result.total
+    ? `${result.offset + 1}–${result.offset + result.entries.length} of ${result.total} entries`
+    : "0 entries";
+  $("files-prev").disabled = offset === 0;
+  $("files-next").disabled = !result.has_more;
+}
+$("file-search-form").onsubmit = (e) => {
+  e.preventDefault();
+  work("Finding tracked paths…", () => loadFiles(0));
+};
+$("files-prev").onclick = () =>
+  work("Loading previous entries…", () =>
+    loadFiles(Math.max(0, filePage.offset - 100)),
+  );
+$("files-next").onclick = () =>
+  work("Loading more entries…", () => loadFiles(filePage.offset + 100));
+$("preview-close").onclick = () => $("preview-dialog").close();
+$("preview-download").onclick = () => {
+  if (preview)
+    download(
+      new Blob([
+        Uint8Array.from(atob(preview.content), (c) => c.charCodeAt(0)),
+      ]),
+      preview.path.split("/").pop(),
+    );
+};
+function renderCommands() {
+  const query = $("command-query").value.toLowerCase(),
+    list = $("command-list");
+  list.replaceChildren();
+  for (const [page, name] of Object.entries(names)) {
+    if (!name.toLowerCase().includes(query)) continue;
+    const b = node("button", "command-item", name);
+    b.type = "button";
+    b.append(node("span", "", "↗"));
+    b.onclick = () => {
+      $("command-dialog").close();
+      navigate(page);
+    };
+    list.append(b);
+  }
+}
+function openCommands() {
+  renderCommands();
+  $("command-dialog").showModal();
+  $("command-query").focus();
+}
+$("command-open").onclick = openCommands;
+$("command-close").onclick = () => $("command-dialog").close();
+$("command-query").oninput = renderCommands;
+$("command-query").onkeydown = (e) => {
+  if (e.key === "Enter") {
+    $("command-list").querySelector("button")?.click();
+  }
+};
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    openCommands();
+  }
+});
+
+let profile = {
+    name: "Local operator",
+    mode: "system",
+    scheme: "lime",
+    motion: false,
+    draft_path: "",
+    draft: "",
+    bookmarks: [],
+  },
+  profileLoaded = false,
+  draftTimer,
+  cloudTimer,
+  cloudPending = null;
+const systemDark = matchMedia("(prefers-color-scheme: dark)");
+function applyAppearance(p) {
+  document.documentElement.dataset.mode =
+    p.mode === "system" ? (systemDark.matches ? "dark" : "light") : p.mode;
+  document.documentElement.dataset.scheme = p.scheme;
+  document.body.classList.toggle("reduced-motion", !!p.motion);
+}
+systemDark.addEventListener("change", () => applyAppearance(profile));
+function renderProfile(p) {
+  profile = p;
+  applyAppearance(p);
+  $("profile-label").textContent = p.name || "Local operator";
+  $("profile-name").value = p.name || "";
+  $("theme-mode").value = p.mode;
+  $("reduce-motion").checked = p.motion;
+  $("draft-summary").textContent = p.draft_path
+    ? "Saved locally: " + p.draft_path
+    : "No saved draft yet.";
+  if (!profileLoaded) {
+    profileLoaded = true;
+    if (p.draft_path) {
+      $("file-path").value = p.draft_path;
+      $("file-content").value = p.draft;
+    }
+  }
+  renderBookmarks();
+}
+async function saveProfile(p) {
+  const saved = await api("profile", p);
+  renderProfile(saved);
+  state.profile = saved;
+  return saved;
+}
+$("profile-form").onsubmit = (e) => {
+  e.preventDefault();
+  work("Saving your local profile…", async () => {
+    await saveProfile({ ...profile, name: $("profile-name").value.trim() });
+    toast("Profile saved on this computer.");
+  });
+};
+async function saveDraft() {
+  await saveProfile({
+    ...profile,
+    draft_path: $("file-path").value,
+    draft: $("file-content").value,
+  });
+}
+$("save-draft").onclick = () => work("Saving your draft…", saveDraft);
+$("resume-draft").onclick = () => {
+  if (!profile.draft_path) {
+    toast("Prepare a file in Guarded publish to start a draft.");
+    return;
+  }
+  $("file-path").value = profile.draft_path;
+  $("file-content").value = profile.draft;
+  invalidateReview();
+  navigate("publish");
+};
+for (const id of ["file-path", "file-content"]) {
+  $(id).addEventListener("input", () => {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(async function persist() {
+      if (busy) {
+        draftTimer = setTimeout(persist, 1200);
+        return;
+      }
+      try {
+        await saveDraft();
+      } catch {
+        $("draft-summary").textContent =
+          "Draft not saved. Use Save current draft to retry.";
+      }
+    }, 900);
+  });
+}
+function renderBookmarks() {
+  const list = $("bookmarks");
+  list.replaceChildren();
+  for (const url of profile.bookmarks || []) {
+    const b = node(
+      "button",
+      "workspace-choice",
+      url.replace("https://github.com/", ""),
+    );
+    b.type = "button";
+    b.onclick = () => {
+      navigate("settings");
+      connectionTab("github");
+      $("github-url").value = url;
+      toast("Repository URL ready. Choose Import from GitHub to continue.");
+    };
+    list.append(b);
+  }
+}
+$("bookmark-current").onclick = () =>
+  work("Saving repository bookmark…", async () => {
+    if (!state.repository_url)
+      throw Error("Connect a GitHub repository first.");
+    await saveProfile({
+      ...profile,
+      bookmarks: [
+        ...new Set([...(profile.bookmarks || []), state.repository_url]),
+      ],
+    });
+    toast("Repository bookmarked.");
+  });
+async function loadInsights() {
+  const result = await api("insights"),
+    target = $("account-insights");
+  target.replaceChildren();
+  for (const [key, label] of [
+    ["workspaces", "Saved workspaces"],
+    ["actions", "Recorded actions"],
+    ["published", "Published operations"],
+    ["model_trials", "Model trials"],
+  ]) {
+    const card = node("div", "metric");
+    card.append(
+      node("span", "metric-label", label),
+      node("strong", "", String(result[key])),
+    );
+    target.append(card);
+  }
+}
+let selectedScheme = "lime";
+const schemes = [
+  ["lime", "Citrus", 82],
+  ["ocean", "Tidal", 205],
+  ["violet", "Iris", 265],
+  ["rose", "Bloom", 335],
+  ["amber", "Ember", 38],
+];
+function drawSchemes() {
+  const list = $("scheme-options");
+  list.replaceChildren();
+  for (const [id, label, hue] of schemes) {
+    const b = node("button", "scheme-choice");
+    b.type = "button";
+    b.setAttribute("aria-pressed", String(selectedScheme === id));
+    const dot = node("i");
+    dot.style.setProperty("--swatch", hue);
+    b.append(dot, node("span", "", label));
+    b.onclick = () => {
+      selectedScheme = id;
+      applyAppearance({ ...profile, mode: $("theme-mode").value, scheme: id });
+      drawSchemes();
+    };
+    list.append(b);
+  }
+}
+$("appearance-open").onclick = () => {
+  selectedScheme = profile.scheme;
+  $("theme-mode").value = profile.mode;
+  drawSchemes();
+  $("appearance-dialog").showModal();
+};
+$("theme-mode").onchange = () =>
+  applyAppearance({
+    ...profile,
+    mode: $("theme-mode").value,
+    scheme: selectedScheme,
+  });
+$("appearance-close").onclick = () => $("appearance-dialog").close();
+$("appearance-dialog").addEventListener("close", () =>
+  applyAppearance(profile),
+);
+$("appearance-save").onclick = () =>
+  work("Saving your appearance…", async () => {
+    await saveProfile({
+      ...profile,
+      mode: $("theme-mode").value,
+      scheme: selectedScheme,
+    });
+    $("appearance-dialog").close();
+    toast("Appearance saved.");
+  });
+$("reduce-motion").onchange = () =>
+  work("Saving animation preference…", () =>
+    saveProfile({ ...profile, motion: $("reduce-motion").checked }),
+  );
+function renderCloud(c) {
+  $("cloud-url").value = c.url || "";
+  $("account-state").textContent = c.signed_in
+    ? "Cloud connected · local work saved"
+    : "Saved on this computer";
+  $("cloud-description").textContent = c.signed_in
+    ? "Signed in as " + c.email
+    : c.pending
+      ? "Complete sign-in in your browser. This window will reconnect."
+      : c.configured
+        ? "Cloud is configured. Sign in to save or restore portable work."
+        : "Optional cloud sync needs your Supabase project configuration.";
+  $("cloud-github").disabled = !c.configured || c.pending;
+  $("cloud-google").disabled = !c.configured || c.pending;
+  $("cloud-github").hidden = c.signed_in;
+  $("cloud-google").hidden = c.signed_in;
+  $("cloud-signout").hidden = !c.signed_in;
+  $("cloud-save").disabled = !c.signed_in;
+  $("cloud-list").disabled = !c.signed_in;
+  if (c.pending && !cloudTimer) cloudTimer = setTimeout(pollCloud, 2000);
+}
+async function pollCloud() {
+  cloudTimer = null;
+  try {
+    renderCloud(await api("cloud/status"));
+  } catch {
+    if (!document.body.classList.contains("session-locked"))
+      cloudTimer = setTimeout(pollCloud, 3000);
+  }
+}
+$("cloud-form").onsubmit = (e) => {
+  e.preventDefault();
+  work("Saving cloud configuration…", async () => {
+    renderCloud(
+      await api("cloud/configure", {
+        url: $("cloud-url").value.trim(),
+        key: $("cloud-key").value.trim(),
+      }),
+    );
+    $("cloud-key").value = "";
+    $("cloud-setup").open = false;
+    toast(
+      "Connection saved. Enable your provider and apply the database schema before signing in.",
+    );
+  });
+};
+for (const provider of ["github", "google"])
+  $("cloud-" + provider).onclick = () =>
+    work("Opening secure sign-in…", async () =>
+      renderCloud(await api("cloud/sign-in", { provider })),
+    );
+$("cloud-signout").onclick = () =>
+  work("Signing out…", async () => {
+    renderCloud(await api("cloud/sign-out"));
+    $("cloud-snapshots").replaceChildren();
+    toast("Signed out locally. Your local work remains saved.");
+  });
+function renderSaves(saves) {
+  const target = $("cloud-snapshots");
+  target.replaceChildren();
+  if (!saves.length)
+    target.append(
+      node(
+        "p",
+        "field-note",
+        "No cloud saves yet. Your local work is ready to save.",
+      ),
+    );
+  for (const snapshot of saves) {
+    const b = node(
+      "button",
+      "cloud-snapshot",
+      snapshot.payload.name || "Saved profile",
+    );
+    b.append(
+      node(
+        "small",
+        "",
+        new Date(snapshot.created_at).toLocaleString() +
+          " · " +
+          (snapshot.payload.bookmarks || []).length +
+          " bookmarks",
+      ),
+    );
+    b.onclick = () => {
+      cloudPending = snapshot.payload;
+      $("restore-preview").textContent = JSON.stringify(
+        snapshot.payload,
+        null,
+        2,
+      );
+      $("cloud-restore-dialog").showModal();
+    };
+    target.append(b);
+  }
+}
+$("cloud-save").onclick = () =>
+  work("Saving portable work to your account…", async () => {
+    clearTimeout(draftTimer);
+    await saveDraft();
+    renderSaves(await api("cloud/save"));
+    toast("Cloud snapshot saved.");
+  });
+$("cloud-list").onclick = () =>
+  work("Finding saved work…", async () => renderSaves(await api("cloud/list")));
+$("restore-close").onclick = () => $("cloud-restore-dialog").close();
+$("restore-confirm").onclick = () =>
+  work("Restoring your chosen snapshot…", async () => {
+    if (!cloudPending) return;
+    clearTimeout(draftTimer);
+    await saveProfile(cloudPending);
+    $("file-path").value = profile.draft_path;
+    $("file-content").value = profile.draft;
+    invalidateReview();
+    $("cloud-restore-dialog").close();
+    toast("Portable work restored. Open a bookmarked repository to continue.");
+  });
 navigate(location.hash.slice(1));
-work("Opening your local workspace…", refresh);
+if (token) work("Opening your local workspace…", refresh);
+else showSessionGate();

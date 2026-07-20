@@ -72,6 +72,34 @@ func (s *Service) Archive(ctx context.Context, user, id, commit string) ([]byte,
 	}
 	return git(ctx, s.repo(id), nil, "archive", "--format=zip", commit)
 }
+
+// ReadFile returns only the tracked blob itself. Symlinks are not followed.
+func (s *Service) ReadFile(ctx context.Context, user, id, commit, name string) ([]byte, error) {
+	if !validPath(name) {
+		return nil, fail("BAD_REQUEST", "invalid path")
+	}
+	snap, err := s.Snapshot(ctx, user, id, commit)
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range snap.Entries {
+		if entry.Path == name {
+			if entry.Type != "regular" && entry.Type != "symlink" {
+				return nil, fail("BAD_REQUEST", "select a file or symlink")
+			}
+			size, err := gitText(ctx, s.repo(id), nil, "cat-file", "-s", entry.OID)
+			if err != nil {
+				return nil, err
+			}
+			n, err := strconv.ParseInt(size, 10, 64)
+			if err != nil || n > 1<<20 {
+				return nil, fail("LIMIT", "preview is limited to files of 1 MiB")
+			}
+			return git(ctx, s.repo(id), nil, "cat-file", "blob", entry.OID)
+		}
+	}
+	return nil, fail("NOT_FOUND", "file not found in snapshot")
+}
 func (s *Service) Register(ctx context.Context, user, id, commit string) (Snapshot, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -6,8 +6,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func quiet(c *exec.Cmd) { c.SysProcAttr = &syscall.SysProcAttr{HideWindow: true} }
@@ -26,6 +28,9 @@ func OpenWindow(url string) error {
 			return c.Start()
 		}
 	}
+	return OpenBrowser(url)
+}
+func OpenBrowser(url string) error {
 	c := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", url)
 	quiet(c)
 	return c.Start()
@@ -35,4 +40,19 @@ func ShowError(err error) {
 	c.Env = append(os.Environ(), "NSF_ERROR="+fmt.Sprint(err))
 	quiet(c)
 	_ = c.Run()
+}
+
+// Cancel the clone and its HTTPS/index-pack helpers before removing staging files.
+func cancelTree(c *exec.Cmd) {
+	c.Cancel = func() error {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		killer := exec.CommandContext(ctx, filepath.Join(os.Getenv("SystemRoot"), "System32", "taskkill.exe"), "/PID", strconv.Itoa(c.Process.Pid), "/T", "/F")
+		quiet(killer)
+		if err := killer.Run(); err != nil {
+			return c.Process.Kill()
+		}
+		return nil
+	}
+	c.WaitDelay = 6 * time.Second
 }

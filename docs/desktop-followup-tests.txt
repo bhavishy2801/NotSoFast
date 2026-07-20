@@ -1,0 +1,5 @@
+?   	notsofast/cmd/notsofast	[no test files]
+?   	notsofast/cmd/nsf	[no test files]
+ok  	notsofast/core	135.099s
+ok  	notsofast/desktop	32.046s
+ok  	notsofast/protocol	1.930s

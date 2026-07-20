@@ -1764,3 +1764,450 @@ body.reduced-motion *::after {
   animation: none !important;
   transition: none !important;
 }
+
+/* Connection and inspection surfaces share the same visual language as the evidence workflow. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.command-trigger {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: #7c896b;
+  display: flex;
+  gap: 25px;
+  align-items: center;
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+kbd {
+  font:
+    9px Workspace,
+    sans-serif;
+  border: 1px solid #dfe5d5;
+  border-radius: 4px;
+  padding: 2px 5px;
+  background: #fff;
+  color: #8a9679;
+}
+.connection-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  background: #f1f4e9;
+  border-radius: 12px;
+  margin: 23px 0;
+}
+.connection-tabs button {
+  flex: 1;
+  border-radius: 8px;
+  padding: 11px;
+  background: transparent;
+  color: #7f8b6c;
+  font-size: 12px;
+  font-weight: 600;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
+}
+.connection-tabs button.active {
+  background: white;
+  box-shadow: 0 2px 8px #3245220a;
+  color: #344923;
+}
+.github-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+}
+.github-account > div {
+  flex: 1;
+  min-width: 0;
+}
+.github-account strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.github-account p {
+  font-size: 10px;
+  margin-top: 4px;
+}
+.github-account .avatar {
+  background: #26351f;
+  color: var(--lime);
+  height: 37px;
+  width: 37px;
+  flex-shrink: 0;
+}
+.github-account .button {
+  font-size: 10px;
+  padding: 9px 12px;
+  min-height: 34px;
+}
+.auth-box {
+  background: #f2f7e6;
+  border: 1px solid #dce8c7;
+  border-radius: 13px;
+  padding: 20px;
+  margin: 10px 0;
+}
+.auth-box p {
+  font-size: 12px;
+}
+.auth-box > strong {
+  display: block;
+  font:
+    28px/1.4 Consolas,
+    monospace;
+  letter-spacing: 3px;
+  color: #526e2a;
+  margin: 13px 0;
+}
+.auth-box .text-button {
+  margin-top: 13px;
+}
+.workspace-list {
+  margin-top: 13px;
+}
+.workspace-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  text-align: left;
+  color: #728259;
+}
+.workspace-choice > span {
+  flex: 1;
+  min-width: 0;
+}
+.workspace-choice strong {
+  display: block;
+  font-size: 12px;
+  color: #39472d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-choice small {
+  font-size: 10px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 5px;
+}
+.workspace-choice:hover {
+  background: #f9fcf3;
+}
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: #fff4ea;
+  border: 1px solid #f0d8c4;
+  border-radius: 13px;
+  padding: 15px 20px;
+  margin-bottom: 24px;
+  color: #975421;
+}
+.error-banner > div {
+  flex: 1;
+}
+.error-banner strong {
+  font-size: 12px;
+}
+.error-banner p {
+  font-size: 11px;
+  color: #9f6b45;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.error-banner .button {
+  font-size: 10px;
+  min-height: 32px;
+  padding: 8px 11px;
+}
+.session-gate {
+  max-width: 600px;
+  margin: 45px auto;
+  padding: 38px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 20px 70px #4052270a;
+}
+.session-gate > img {
+  margin-bottom: 25px;
+}
+.session-gate > p:not(.eyebrow) {
+  font-size: 13px;
+  margin-top: 20px;
+}
+.session-gate h1 {
+  font-size: 34px;
+}
+.session-gate details {
+  margin-top: 28px;
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+}
+.session-gate summary {
+  font-size: 12px;
+  color: #73874f;
+  cursor: pointer;
+}
+.session-gate .button {
+  margin-top: 15px;
+}
+.session-locked .page,
+.session-locked .error-banner {
+  display: none !important;
+}
+.file-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 23px;
+}
+.file-toolbar > svg {
+  color: #94a47a;
+}
+.file-toolbar input {
+  flex: 1;
+  min-width: 0;
+}
+.file-table-head,
+.file-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 95px 110px;
+  align-items: center;
+  gap: 20px;
+}
+.file-table-head {
+  font-size: 9px;
+  color: #8a9974;
+  letter-spacing: 1px;
+  padding: 12px 24px;
+  background: #fafcf6;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.file-row {
+  width: 100%;
+  padding: 15px 24px;
+  background: none;
+  text-align: left;
+  border-bottom: 1px solid #eff2e8;
+  color: #4e5f3c;
+  transition: background 0.2s;
+}
+.file-row:hover {
+  background: #f4f9eb;
+}
+.file-name {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+.file-name > span {
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-name svg {
+  width: 17px;
+  height: 17px;
+  color: #95a978;
+}
+.file-row .badge {
+  justify-self: start;
+}
+.file-row code {
+  font-size: 10px;
+  color: #91a078;
+}
+.file-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 18px 24px;
+}
+.file-pagination > span {
+  flex: 1;
+  font-size: 11px;
+  color: #83946a;
+}
+.file-pagination .button {
+  font-size: 10px;
+  padding: 8px 12px;
+  min-height: 32px;
+}
+.command-dialog {
+  max-width: 530px;
+}
+.command-dialog > input {
+  margin: 18px 20px;
+  width: calc(100% - 40px);
+}
+.command-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px 24px;
+  background: none;
+  text-align: left;
+  color: #506339;
+  font-size: 13px;
+}
+.command-item:hover,
+.command-item:focus {
+  background: #f0f7e3;
+}
+.command-item span {
+  color: #94a775;
+}
+.command-dialog > .field-note {
+  border-top: 1px solid var(--line);
+  padding: 15px 24px;
+  margin: 10px 0 0;
+}
+.dialog-head .field-note {
+  margin: 4px 0 0;
+}
+#preview-content {
+  min-height: 220px;
+  font-size: 12px;
+  line-height: 1.9;
+  tab-size: 4;
+}
+@media (min-width: 901px) {
+  .nav-item {
+    font-size: 13px;
+  }
+  .hero p {
+    font-size: 13px;
+  }
+  .hero-note {
+    font-size: 10px;
+  }
+  .metric-label {
+    font-size: 12px;
+  }
+  .metric > span {
+    font-size: 10px;
+  }
+  .eyebrow {
+    font-size: 10px;
+  }
+  .activity-main strong {
+    font-size: 12px;
+  }
+  .activity-main small {
+    font-size: 10px;
+  }
+  .activity-time {
+    font-size: 10px;
+  }
+  .page-heading p:not(.eyebrow) {
+    font-size: 13px;
+  }
+  .next-panel p:not(.eyebrow) {
+    font-size: 12px;
+  }
+  .topbar-right {
+    gap: 13px;
+  }
+  .field-note {
+    font-size: 11px;
+  }
+  .brand {
+    font-size: 24px;
+  }
+}
+@media (max-width: 1150px) {
+  .command-trigger {
+    display: none;
+  }
+  .topbar-right {
+    gap: 10px;
+  }
+}
+@media (max-width: 650px) {
+  .connection {
+    display: none;
+  }
+  #open-browser {
+    font-size: 10px;
+  }
+  .file-toolbar {
+    padding: 17px;
+    gap: 8px;
+  }
+  .file-toolbar > .button {
+    font-size: 10px;
+    padding: 10px;
+  }
+  .file-table-head,
+  .file-row {
+    grid-template-columns: minmax(0, 1fr) 65px;
+    gap: 9px;
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+  .file-row > code,
+  .file-table-head > span:last-child {
+    display: none;
+  }
+  .file-name > span {
+    font-size: 11px;
+  }
+  .file-pagination {
+    padding: 15px;
+  }
+  .file-pagination > span {
+    font-size: 10px;
+  }
+  .error-banner {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+  .error-banner > div {
+    flex-basis: 80%;
+  }
+  .session-gate {
+    padding: 26px;
+    margin: 15px auto;
+  }
+  .session-gate h1 {
+    font-size: 28px;
+  }
+  .github-account {
+    flex-wrap: wrap;
+  }
+  .auth-box > strong {
+    font-size: 25px;
+  }
+  .sidebar nav {
+    gap: 4px;
+  }
+  .nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+}
