@@ -12,6 +12,36 @@ try:
 except FileNotFoundError:
     pass
 with tempfile.TemporaryDirectory(prefix='setup-',dir=ROOT/'.tools') as temp:
+    # Hold a real Windows directory handle without delete sharing. The installer
+    # must wait for a transient lock, but still reject an existing destination.
+    harness=Path(temp)/'MoveTest.cs'
+    harness.write_text(r'''
+using System;
+using System.IO;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Threading;
+class MoveTest {
+ [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+ static extern IntPtr CreateFile(string name,uint access,uint share,IntPtr security,uint mode,uint flags,IntPtr template);
+ [DllImport("kernel32.dll")] static extern bool CloseHandle(IntPtr handle);
+ static void Main(string[] args) {
+  string source=Path.Combine(args[0],"locked"),dest=Path.Combine(args[0],"moved");Directory.CreateDirectory(source);
+  var move=typeof(Setup).GetMethod("MoveInstallation",BindingFlags.Static|BindingFlags.NonPublic);
+  IntPtr handle=CreateFile(source,0,3,IntPtr.Zero,3,0x02000000,IntPtr.Zero);
+  if(handle==new IntPtr(-1))throw new Exception("Cannot lock directory");
+  var release=new Thread(()=>{Thread.Sleep(1000);CloseHandle(handle);});release.Start();
+  var timer=System.Diagnostics.Stopwatch.StartNew();move.Invoke(null,new object[]{source,dest});release.Join();
+  if(timer.ElapsedMilliseconds<800||!Directory.Exists(dest)||Directory.Exists(source))throw new Exception("Lock retry failed");
+  Directory.CreateDirectory(source);
+  try{move.Invoke(null,new object[]{source,dest});throw new Exception("Existing destination accepted");}
+  catch(TargetInvocationException e){if(!(e.InnerException is IOException))throw;}
+ }
+}''')
+    compiler=Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
+    check=Path(temp)/'MoveTest.exe'
+    subprocess.run([str(compiler),'/nologo','/target:exe','/main:MoveTest','/reference:System.Windows.Forms.dll','/reference:System.Drawing.dll','/reference:System.IO.Compression.dll','/out:'+str(check),str(ROOT/'installer/Setup.cs'),str(harness)],check=True,timeout=30)
+    subprocess.run([str(check),temp],check=True,timeout=15)
     target=Path(temp)/'app'; data=Path(temp)/'saved'; data.mkdir()
     sentinel=data/'keep.txt';sentinel.write_text('keep saved work')
     setup=ROOT/'dist/NotSoFast-Setup.exe'
@@ -53,4 +83,4 @@ with tempfile.TemporaryDirectory(prefix='setup-',dir=ROOT/'.tools') as temp:
     try:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER,KEY):raise AssertionError('uninstall registration remains')
     except FileNotFoundError:pass
-print(json.dumps({'result':'PASS','checks':['install','bundled runtimes','upgrade','registered uninstall','installed app launch','junction rejected before deletion','uninstall','saved data retained']}))
+print(json.dumps({'result':'PASS','checks':['transient directory lock retry','existing destination rejected','install','bundled runtimes','upgrade','registered uninstall','installed app launch','junction rejected before deletion','uninstall','saved data retained']}))

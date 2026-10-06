@@ -1,1 +1,1 @@
-{"result": "PASS", "checks": ["install", "bundled runtimes", "upgrade", "registered uninstall", "installed app launch", "junction rejected before deletion", "uninstall", "saved data retained"]}
+{"result": "PASS", "checks": ["transient directory lock retry", "existing destination rejected", "install", "bundled runtimes", "upgrade", "registered uninstall", "installed app launch", "junction rejected before deletion", "uninstall", "saved data retained"]}

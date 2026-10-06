@@ -1,0 +1,1 @@
+{"result": "PASS", "viewports": [1440, 768, 390, 320], "checks": ["production CSP", "screenshot tabs", "coverage example", "theme switch", "FAQ", "no horizontal overflow", "no JS errors"]}

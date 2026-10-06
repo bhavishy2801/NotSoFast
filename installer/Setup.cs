@@ -10,7 +10,7 @@ using System.Text;
 using System.Collections.Generic;
 
 class Setup : Form {
- const string Version = "0.3.0";
+ const string Version = "0.3.1";
  const string RegPath = @"Software\Microsoft\Windows\CurrentVersion\Uninstall\NotSoFast";
  TextBox destination = new TextBox(); CheckBox shortcut = new CheckBox(); Button action = new Button(); Label status = new Label(); ProgressBar progress = new ProgressBar();
  static string ProgramFolder { get {return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Programs),"NotSoFast");} }
@@ -55,6 +55,16 @@ class Setup : Form {
  static bool Running(string root){foreach(var p in Process.GetProcesses()){try{string file=p.MainModule.FileName;if(file.StartsWith(root+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)&&p.Id!=Process.GetCurrentProcess().Id)return true;}catch{}finally{p.Dispose();}}return false;}
  static void Link(string name,string target){Type t=Type.GetTypeFromProgID("WScript.Shell");object shell=Activator.CreateInstance(t);object link=t.InvokeMember("CreateShortcut",BindingFlags.InvokeMethod,null,shell,new object[]{name});try{var lt=link.GetType();lt.InvokeMember("TargetPath",BindingFlags.SetProperty,null,link,new object[]{target});lt.InvokeMember("WorkingDirectory",BindingFlags.SetProperty,null,link,new object[]{Path.GetDirectoryName(target)});lt.InvokeMember("Save",BindingFlags.InvokeMethod,null,link,null);}finally{System.Runtime.InteropServices.Marshal.FinalReleaseComObject(link);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);}}
  static void RemoveOwnedLink(string name,string root){if(!File.Exists(name))return;Type t=Type.GetTypeFromProgID("WScript.Shell");object shell=Activator.CreateInstance(t);object link=t.InvokeMember("CreateShortcut",BindingFlags.InvokeMethod,null,shell,new object[]{name});try{string target=(string)link.GetType().InvokeMember("TargetPath",BindingFlags.GetProperty,null,link,null);if(!string.IsNullOrEmpty(target)&&Path.GetFullPath(target).StartsWith(root+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase))File.Delete(name);}finally{System.Runtime.InteropServices.Marshal.FinalReleaseComObject(link);System.Runtime.InteropServices.Marshal.FinalReleaseComObject(shell);}}
+ // Windows scanners can briefly hold freshly extracted executables open.
+ static void MoveInstallation(string source,string destination){
+  for(int attempt=0;;attempt++){
+   CheckTree(source);CheckAncestors(destination);
+   try{Directory.Move(source,destination);return;}
+   catch(IOException e){int code=e.HResult&65535;if(attempt>=20||(code!=5&&code!=32&&code!=33))throw;}
+   catch(UnauthorizedAccessException){if(attempt>=20)throw;}
+   System.Threading.Thread.Sleep(250);
+  }
+ }
  static void Install(string path,bool desktop,Action<int> update){
 #if !UNINSTALL
   string root=Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar);
@@ -70,14 +80,14 @@ class Setup : Form {
    }
    using(var input=Assembly.GetExecutingAssembly().GetManifestResourceStream("uninstall.exe"))using(var output=File.Create(Path.Combine(stage,"Uninstall.exe")))input.CopyTo(output);
    var names=new List<string>();foreach(string f in Directory.GetFiles(stage,"*",SearchOption.AllDirectories))names.Add(f.Substring(stage.Length+1));File.WriteAllLines(Path.Combine(stage,"installed-files.txt"),names.ToArray());
-   if(Directory.Exists(root))Directory.Move(root,backup);Directory.Move(stage,root);replaced=true;
+   if(Directory.Exists(root))MoveInstallation(root,backup);MoveInstallation(stage,root);replaced=true;
    Directory.CreateDirectory(ProgramFolder);Link(Path.Combine(ProgramFolder,"NotSoFast.lnk"),Path.Combine(root,"NotSoFast.exe"));Link(Path.Combine(ProgramFolder,"NotSoFast Web.lnk"),Path.Combine(root,"NotSoFast-Web.exe"));Link(Path.Combine(ProgramFolder,"Uninstall.lnk"),Path.Combine(root,"Uninstall.exe"));
    if(desktop)Link(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),"NotSoFast.lnk"),Path.Combine(root,"NotSoFast.exe"));
    using(var key=Registry.CurrentUser.CreateSubKey(RegPath)){key.SetValue("DisplayName","NotSoFast");key.SetValue("DisplayVersion",Version);key.SetValue("Publisher","NotSoFast contributors");key.SetValue("InstallLocation",root);key.SetValue("UninstallString","\""+Path.Combine(root,"Uninstall.exe")+"\"");key.SetValue("DisplayIcon",Path.Combine(root,"NotSoFast.exe"));key.SetValue("NoModify",1);key.SetValue("NoRepair",1);}
    if(update!=null)update(100);
    // Keep an old installation backup if it contains user-added files.
    if(Directory.Exists(backup))RemoveListedFiles(backup,false);
-  }catch{if(!replaced&&Directory.Exists(backup)&&!Directory.Exists(root))Directory.Move(backup,root);throw;}
+  }catch{if(!replaced&&Directory.Exists(backup)&&!Directory.Exists(root))MoveInstallation(backup,root);throw;}
   finally{if(Directory.Exists(stage))Directory.Delete(stage,true);}
 #endif
  }

@@ -2141,7 +2141,7 @@ kbd {
   }
 }
 @media (max-width: 1150px) {
-  .command-trigger {
+  #command-open {
     display: none;
   }
   .topbar-right {

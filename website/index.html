@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="NotSoFast is a private evidence workspace for AI agent actions. Inspect exact Git snapshots, prove coverage, and review before publishing."
+    />
+    <meta name="theme-color" content="#101411" />
+    <title>NotSoFast — Move fast. Know first.</title>
+    <link rel="icon" href="/assets/mark.svg" />
+    <link rel="stylesheet" href="/site.css" />
+    <script src="/site.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header>
+      <a class="brand" href="#"
+        ><img
+          src="/assets/mark.svg"
+          alt=""
+          width="34"
+          height="34"
+        />NotSoFast<span>.</span></a
+      >
+      <nav aria-label="Main">
+        <a href="#tour">Explore</a><a href="#how">How it works</a
+        ><a href="#questions">Questions</a
+        ><button id="site-theme" aria-label="Switch website color theme">
+          ◐</button
+        ><a
+          class="small-button"
+          href="https://github.com/bhavishy2801/NotSoFast"
+          >GitHub ↗</a
+        >
+      </nav>
+    </header>
+    <main id="main">
+      <section class="hero">
+        <div class="hero-glow"></div>
+        <p class="eyebrow">
+          <span class="live-dot"></span> A LITTLE CERTAINTY GOES A LONG WAY
+        </p>
+        <h1>Move fast.<br /><span>Know first.</span></h1>
+        <p class="lead">
+          Your next action deserves more than a guess.<br />Turn a search into
+          evidence. Review the whole picture.<br />Then make your move.
+        </p>
+        <div class="actions">
+          <a
+            class="primary"
+            href="https://github.com/bhavishy2801/NotSoFast/releases"
+            >Get the desktop app <span>↗</span></a
+          ><a class="secondary" href="#tour">Take a closer look ↓</a>
+        </div>
+        <p class="fine">Windows x64 · Local workspace · Optional cloud saves</p>
+        <div class="principles">
+          <span>01 &nbsp; SEE THE SNAPSHOT</span
+          ><span>02 &nbsp; CHECK THE CLAIM</span
+          ><span>03 &nbsp; ACT WITH EVIDENCE</span>
+        </div>
+      </section>
+      <section id="tour" class="tour">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">LESS FRICTION. MORE CONTEXT.</p>
+            <h2>A workspace that<br />thinks before it writes.</h2>
+          </div>
+          <p>
+            Real product screens. Choose a view to explore what lives inside the
+            desktop app.
+          </p>
+        </div>
+        <div class="tour-tabs" role="group" aria-label="Product screenshots">
+          <button aria-pressed="true" data-screen="desktop-dark.png">
+            After hours</button
+          ><button aria-pressed="false" data-screen="desktop-overview.png">
+            Daylight</button
+          ><button aria-pressed="false" data-screen="desktop-account.png">
+            Saved work
+          </button>
+        </div>
+        <div class="window">
+          <div class="window-bar">
+            <i></i><i></i><i></i><span>notsofast / your workspace</span
+            ><b>LOCAL</b>
+          </div>
+          <img
+            id="product-screen"
+            src="/assets/desktop-dark.png"
+            alt="NotSoFast desktop overview in the dark Iris theme"
+            width="1440"
+            height="1230"
+            loading="lazy"
+          />
+        </div>
+        <p class="caption">
+          This is a product tour. Repository checks and publication run in the
+          installed app.
+        </p>
+      </section>
+      <section id="how" class="how">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">A SMALL CHECK. A MEANINGFUL DIFFERENCE.</p>
+            <h2>“I didn’t find it”<br />isn’t the whole story.</h2>
+          </div>
+          <p>
+            There’s a <code>config/database.yaml</code> in this example
+            repository. See how the result changes when you check beyond one
+            folder.
+          </p>
+        </div>
+        <div class="experiment">
+          <div>
+            <span class="tag">INTERACTIVE EXAMPLE · FIXED FIXTURE</span>
+            <h3>Is database.yaml absent?</h3>
+            <p>Choose the search coverage.</p>
+            <div class="scope-options">
+              <button data-scope="partial" aria-pressed="true">Only src/</button
+              ><button data-scope="full" aria-pressed="false">
+                Whole repository
+              </button>
+            </div>
+            <div class="tree">
+              <span>repository/</span><span>├ src/app.go</span
+              ><span id="witness">└ config/database.yaml</span>
+            </div>
+          </div>
+          <div class="outcome">
+            <span id="decision" class="decision">UNKNOWN</span>
+            <h3 id="decision-title">A partial search leaves a gap.</h3>
+            <p id="decision-body">
+              Checking src/ cannot establish absence everywhere. The unsearched
+              config/ directory still matters.
+            </p>
+            <div class="coverage"><span id="coverage-bar"></span></div>
+            <small id="coverage-caption"
+              >Partial coverage · publication is not justified</small
+            >
+          </div>
+        </div>
+      </section>
+      <section class="features">
+        <article>
+          <span>01 / CONNECT</span>
+          <h3>Your repository.<br />Your starting point.</h3>
+          <p>
+            Choose a local Git folder or a GitHub URL. Sign in for authorized
+            private repositories.
+          </p>
+        </article>
+        <article>
+          <span>02 / CONTINUE</span>
+          <h3>A little less<br />starting over.</h3>
+          <p>
+            Saved drafts, bookmarks, evidence history and optional portable
+            cloud snapshots keep your next step close.
+          </p>
+        </article>
+        <article>
+          <span>03 / MAKE IT YOURS</span>
+          <h3>Daylight to<br />after hours.</h3>
+          <p>
+            Five palettes, system-aware brightness, responsive screens and
+            reduced-motion support.
+          </p>
+        </article>
+      </section>
+      <section class="download" id="download">
+        <p class="eyebrow">YOUR CODE. YOUR MACHINE. YOUR NEXT MOVE.</p>
+        <h2>Make room for<br /><span>a better kind of fast.</span></h2>
+        <div class="actions">
+          <a
+            class="primary"
+            href="https://github.com/bhavishy2801/NotSoFast/releases"
+            >Windows release downloads ↗</a
+          ><a
+            class="secondary"
+            href="https://github.com/bhavishy2801/NotSoFast#start-with-the-app"
+            >Read the getting-started guide</a
+          >
+        </div>
+        <p class="fine">
+          Choose the setup executable from a published release. Source and build
+          instructions are available on GitHub.
+        </p>
+      </section>
+      <section id="questions" class="faq">
+        <h2>A few useful details.</h2>
+        <details>
+          <summary>Does the website run checks on my repository?</summary>
+          <p>
+            No. This site introduces the product. The desktop and local browser
+            app run the Git/SQLite evidence engine on your machine.
+          </p>
+        </details>
+        <details>
+          <summary>Will publication edit or push my source repository?</summary>
+          <p>
+            No. Guarded publication writes to the application's managed branch.
+            You can export the result. Your source working tree and GitHub
+            remote remain unchanged.
+          </p>
+        </details>
+        <details>
+          <summary>Do I need an AI subscription?</summary>
+          <p>
+            No. Evidence tools work without a model. The optional Model lab
+            accepts an existing local server or a compatible provider that you
+            configure.
+          </p>
+        </details>
+        <details>
+          <summary>What does cloud saving include?</summary>
+          <p>
+            Explicit portable saves contain your preferences, draft and GitHub
+            bookmarks. They require your own configured Supabase project. Git
+            data, evidence and model keys are excluded.
+          </p>
+        </details>
+        <details>
+          <summary>What does the evidence actually prove?</summary>
+          <p>
+            Exact scoped claims over tracked immutable Git snapshots, under the
+            documented trust assumptions. It does not infer semantic equivalence
+            or guarantee general agent safety.
+          </p>
+        </details>
+      </section>
+    </main>
+    <footer>
+      <a class="brand" href="#">NotSoFast<span>.</span></a>
+      <p>Built for evidence before action.</p>
+      <a href="https://github.com/bhavishy2801/NotSoFast/blob/main/LICENSE"
+        >MIT license</a
+      ><a href="https://github.com/bhavishy2801/NotSoFast">Source ↗</a>
+    </footer>
+  </body>
+</html>

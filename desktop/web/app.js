@@ -1329,7 +1329,19 @@ function renderBookmarks() {
       $("github-url").value = url;
       toast("Repository URL ready. Choose Import from GitHub to continue.");
     };
-    list.append(b);
+    const row = node("div", "bookmark-row");
+    const remove = node("button", "icon-button", "×");
+    remove.type = "button";
+    remove.setAttribute("aria-label", "Remove bookmark " + url);
+    remove.onclick = () =>
+      work("Removing bookmark…", () =>
+        saveProfile({
+          ...profile,
+          bookmarks: profile.bookmarks.filter((item) => item !== url),
+        }),
+      );
+    row.append(b, remove);
+    list.append(row);
   }
 }
 $("bookmark-current").onclick = () =>
@@ -1399,6 +1411,48 @@ $("theme-mode").onchange = () =>
     ...profile,
     mode: $("theme-mode").value,
     scheme: selectedScheme,
+  });
+$("appearance-reset").onclick = () => {
+  selectedScheme = "lime";
+  $("theme-mode").value = "system";
+  applyAppearance({ ...profile, mode: "system", scheme: "lime" });
+  drawSchemes();
+};
+$("profile-export").onclick = () =>
+  work("Exporting your portable backup…", async () => {
+    clearTimeout(draftTimer);
+    await saveDraft();
+    download(
+      new Blob(
+        [JSON.stringify({ format: "notsofast-profile-v1", profile }, null, 2)],
+        { type: "application/json" },
+      ),
+      "notsofast-profile.json",
+    );
+    toast("Backup exported. It includes your draft text and bookmarked URLs.");
+  });
+$("profile-import").onclick = () => $("profile-import-file").click();
+$("profile-import-file").onchange = () =>
+  work("Reading your backup…", async () => {
+    const file = $("profile-import-file").files[0];
+    $("profile-import-file").value = "";
+    if (!file) return;
+    if (file.size > 512000) throw Error("Backup exceeds 500 KiB.");
+    let data;
+    try {
+      data = JSON.parse(await file.text());
+    } catch {
+      throw Error("Choose a valid NotSoFast JSON backup.");
+    }
+    if (
+      data.format !== "notsofast-profile-v1" ||
+      !data.profile ||
+      typeof data.profile !== "object"
+    )
+      throw Error("This is not a NotSoFast profile backup.");
+    cloudPending = data.profile;
+    $("restore-preview").textContent = JSON.stringify(data.profile, null, 2);
+    $("cloud-restore-dialog").showModal();
   });
 $("appearance-close").onclick = () => $("appearance-dialog").close();
 $("appearance-dialog").addEventListener("close", () =>

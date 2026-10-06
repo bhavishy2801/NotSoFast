@@ -817,6 +817,25 @@
                   </button>
                 </div>
                 <div class="divider"></div>
+                <h3>Offline backup</h3>
+                <p class="field-note">
+                  Export preferences, bookmarks and the saved draft as JSON.
+                  Import previews the backup before restoring; keys and evidence
+                  are excluded.
+                </p>
+                <div class="button-row">
+                  <button id="profile-export" class="button subtle">
+                    Export backup</button
+                  ><button id="profile-import" class="button subtle">
+                    Import backup</button
+                  ><input
+                    id="profile-import-file"
+                    type="file"
+                    accept="application/json,.json"
+                    hidden
+                  />
+                </div>
+                <div class="divider"></div>
                 <h3>Repository bookmarks</h3>
                 <button id="bookmark-current" class="button subtle">
                   Bookmark current GitHub repository
@@ -1072,22 +1091,27 @@
           ×
         </button>
       </div>
-      <p class="field-note">
-        Appearance follows you across desktop and browser windows.
-      </p>
-      <label for="theme-mode">Brightness</label
-      ><select id="theme-mode">
-        <option value="system">Match system</option>
-        <option value="light">Daylight</option>
-        <option value="dark">After hours</option></select
-      ><label>Accent collection</label>
-      <div id="scheme-options" class="scheme-grid"></div>
-      <div class="theme-preview">
-        <span class="pill">YOUR NEXT MOVE</span>
-        <h2>Clarity looks good<br />in every color.</h2>
-        <div class="theme-preview-orb"></div>
+      <div class="dialog-body">
+        <p class="field-note">
+          Appearance follows you across desktop and browser windows.
+        </p>
+        <label for="theme-mode">Brightness</label
+        ><select id="theme-mode">
+          <option value="system">Match system</option>
+          <option value="light">Daylight</option>
+          <option value="dark">After hours</option></select
+        ><label>Accent collection</label>
+        <div id="scheme-options" class="scheme-grid"></div>
+        <div class="theme-preview">
+          <span class="pill">YOUR NEXT MOVE</span>
+          <h2>Clarity looks good<br />in every color.</h2>
+          <div class="theme-preview-orb"></div>
+        </div>
       </div>
       <div class="dialog-actions">
+        <button id="appearance-reset" class="button subtle">
+          Reset preview
+        </button>
         <button id="appearance-save" class="button dark">
           Save appearance
         </button>

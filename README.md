@@ -17,6 +17,8 @@ A search of `src/` cannot prove that `database.yaml` is absent everywhere. NotSo
 
 ## Start with the app
 
+For the separate public product website, see the [Vercel deployment guide](docs/DEPLOYMENT.md). Deploy only `website/`; it requires no secrets. The guide includes release-upload commands, dashboard settings, CLI deployment and your remaining account setup.
+
 **Recommended:** run `dist/NotSoFast-Setup.exe`. The setup wizard installs both launchers and bundled runtimes, adds Start menu entries, offers a desktop shortcut, and registers an uninstaller in Windows Settings. Installation is per Windows user and requires no administrator access. Use the app's **Quit** button before updating or uninstalling. Uninstall keeps saved work. This development build is not code-signed.
 
 The Windows portable build produces `dist/NotSoFast-Windows-x64.zip`. Extract the **entire folder**, then choose:
@@ -59,6 +61,10 @@ Choose **Theme** for **Daylight**, **After hours**, or **Match system**, then pi
 ![After hours with Iris](docs/desktop-dark.png)
 
 **Account** provides a local display name, aggregate insights, saved drafts and GitHub bookmarks. Draft edits save locally after a short pause; **Save current draft** provides an explicit save. Resuming a draft still requires fresh verification in the selected workspace.
+
+Use **Offline backup** to export your profile as JSON or preview and restore a previous backup. Backups include appearance, bookmarks and draft content; store them somewhere private. They do not contain repositories, evidence or credentials. Remove individual bookmarks from Account. The theme dialog scrolls on small screens and offers **Reset preview** before saving.
+
+See the [UI validation report](docs/UI-VALIDATION.md) for browser checks and integrations still requiring your configuration.
 
 ## Cloud account setup
 

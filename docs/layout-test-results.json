@@ -1,0 +1,1 @@
+{"result": "PASS", "viewports": [1280, 800, 390, 320], "pages": 8, "themes": 5, "modes": 3, "checks": ["backup export/import", "invalid backup rejected", "scripted model UI trials/export"], "javascript_errors": []}

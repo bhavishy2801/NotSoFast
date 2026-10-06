@@ -277,7 +277,7 @@ textarea::placeholder {
 #appearance-dialog {
   width: min(560px, calc(100vw - 32px));
 }
-#appearance-dialog > label {
+#appearance-dialog .dialog-body > label {
   display: block;
   margin: 22px 0 10px;
 }
@@ -417,4 +417,135 @@ textarea::placeholder {
 }
 body.reduced-motion .theme-preview-orb {
   animation: none;
+}
+
+/* Dialog content scrolls independently so actions remain reachable at browser zoom. */
+dialog {
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: hidden;
+}
+dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.dialog-head,
+.dialog-actions {
+  flex: none;
+  background: var(--surface);
+  gap: 12px;
+}
+.dialog-head > div,
+.dialog-head h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.dialog-head .icon-button {
+  flex: none;
+}
+.dialog-body {
+  padding: 22px 24px;
+  overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.dialog-actions {
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+dialog > pre {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+dialog > .field-note {
+  padding: 12px 24px;
+  flex: none;
+}
+#command-list {
+  overflow: auto;
+  min-height: 0;
+  padding: 4px 12px;
+}
+#appearance-dialog .scheme-grid {
+  padding: 4px;
+  gap: 10px;
+}
+#appearance-dialog .theme-preview {
+  min-height: 170px;
+}
+#appearance-dialog .dialog-actions {
+  justify-content: space-between;
+}
+.bookmark-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bookmark-row .workspace-choice {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.two-column > * {
+  min-width: 0;
+}
+#preview-name {
+  overflow-wrap: anywhere;
+}
+#profile-form > button {
+  margin-top: 14px;
+}
+#profile-form {
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  .dialog-body {
+    padding: 18px 16px;
+  }
+  .dialog-head,
+  .dialog-actions {
+    padding: 14px 16px;
+  }
+  .dialog-head h3 {
+    font-size: 16px;
+  }
+  #appearance-dialog .scheme-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .theme-preview h2 {
+    font-size: 23px;
+  }
+  .topbar .breadcrumb {
+    display: none;
+  }
+  .topbar-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .file-row {
+    min-width: 0;
+  }
+  .page-heading {
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  main {
+    min-width: 0;
+  }
+  .dialog-actions .button {
+    min-height: 40px;
+  }
+}
+
+@media (max-height: 650px) {
+  #appearance-dialog .theme-preview {
+    display: none;
+  }
+  #appearance-dialog .dialog-body > label {
+    margin-top: 16px;
+  }
+  .scheme-choice {
+    padding: 10px 4px;
+  }
 }
