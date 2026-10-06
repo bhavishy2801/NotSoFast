@@ -75,7 +75,7 @@ Use **Project → Settings → Domains**, add your domain, and apply exactly the
 ## Local preview and checks
 
 ```powershell
-python -m http.server 4173 --bind 127.0.0.1 --directory website
+python scripts/preview_website.py --port 4173
 # Open http://127.0.0.1:4173
 .tools/ui-venv/Scripts/python.exe python/test_website.py
 $env:NSF_DESKTOP_EXE = "$PWD/dist/NotSoFast/NotSoFast.exe"
@@ -83,6 +83,8 @@ $env:NSF_DESKTOP_EXE = "$PWD/dist/NotSoFast/NotSoFast.exe"
 ```
 
 The website test exercises the real page with production CSP at four viewport sizes. The app test exercises eight pages, palette/brightness controls, offline backup round-trip and scripted model transport through the UI. Scripted transport is not real-model inference.
+
+The preview server supports HTTP byte ranges for the scroll-controlled MP4. A basic server without range support may display the video but fail to seek. Vercel serves the bundled static video directly. The 8-second, silent motion film is original procedural artwork, generated with `scripts/render-film.py` (build-time Pillow and imageio-ffmpeg); the deployed site has no Python or rendering dependencies. It loads near the film section, with chapter controls, a keyboard timeline and a poster fallback. Reduced motion disables scroll-driven seeking; manual controls remain available.
 
 ## What remains on your side
 

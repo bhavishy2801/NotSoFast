@@ -1,8 +1,12 @@
 """Checks the actual static website in a browser, including its production CSP."""
-import functools,http.server,json,os,threading
+import functools,http.server,json,os,threading,sys
 from pathlib import Path
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(ROOT/'scripts'))
+from preview_website import RangeHandler
 config=json.loads((ROOT/'website/vercel.json').read_text(encoding='utf-8-sig'))
 root_config=json.loads((ROOT/'vercel.json').read_text(encoding='utf-8-sig'))
 for base,settings in [(ROOT,root_config),(ROOT/'website',config)]:
@@ -10,7 +14,7 @@ for base,settings in [(ROOT,root_config),(ROOT/'website',config)]:
     assert (base/settings['outputDirectory']/'index.html').is_file()
     assert settings['framework'] is None and settings['buildCommand']==''
 assert root_config['headers']==config['headers']
-class Handler(http.server.SimpleHTTPRequestHandler):
+class Handler(RangeHandler):
     def log_message(self,*args):pass
     def end_headers(self):
         for header in config['headers'][0]['headers']:self.send_header(header['key'],header['value'])
@@ -18,6 +22,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Handler,directory=str(ROOT/'website')))
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
+    video_url='http://127.0.0.1:'+str(server.server_port)+'/assets/evidence-film.mp4'
+    for value in ['bytes=0-31','bytes=-32']:
+        with urlopen(Request(video_url,headers={'Range':value})) as response:
+            assert response.status==206 and len(response.read())==32
+    try:urlopen(Request(video_url,headers={'Range':'bytes=999999999-'}))
+    except HTTPError as exc:assert exc.code==416
+    else:raise AssertionError('Invalid byte range accepted')
     with sync_playwright() as p:
         browser=p.chromium.launch(channel=os.environ.get('NSF_BROWSER','msedge'),headless=True)
         page=browser.new_page(viewport={'width':1440,'height':1000});errors=[]
@@ -25,6 +36,22 @@ try:
         page.goto('http://127.0.0.1:'+str(server.server_port))
         for width,height in [(1440,1000),(768,1024),(390,844),(320,568)]:
             page.set_viewport_size({'width':width,'height':height})
+            page.locator('[data-frame="0.98"]').click()
+            expect(page.locator('#film-chapter')).to_have_text('03 / REVIEW THE NEXT MOVE')
+            for _ in range(60):
+                if page.locator('#evidence-film').evaluate('v=>v.readyState>=2 && !v.seeking && v.currentTime>7'):break
+                page.wait_for_timeout(100)
+            assert page.locator('#evidence-film').evaluate('v=>v.readyState>=2 && v.currentTime>7'), 'Film did not seek to final chapter'
+            page.locator('#film-timeline').focus()
+            page.keyboard.press('Home')
+            expect(page.locator('#film-timeline')).to_have_value('0')
+            expect(page.locator('#film-chapter')).to_have_text('01 / THE SEARCH SPACE')
+            if width==1440:
+                page.evaluate("window.dispatchEvent(new WheelEvent('wheel')); const f=document.querySelector('#film'); window.scrollTo({top:f.offsetTop+(f.offsetHeight-innerHeight)*.5,behavior:'instant'})")
+                for _ in range(50):
+                    if page.locator('#evidence-film').evaluate('v=>!v.seeking && v.currentTime>3 && v.currentTime<5'):break
+                    page.wait_for_timeout(100)
+                assert page.locator('#evidence-film').evaluate('v=>v.currentTime>3 && v.currentTime<5'), 'Scroll did not scrub the film'
             for label in ['After hours','Daylight','Saved work']:
                 page.get_by_role('button',name=label,exact=True).click()
                 page.locator("#product-screen").evaluate("e => e.decode()")
@@ -55,10 +82,20 @@ try:
             page.screenshot(path=str(ROOT/f'docs/website-{width}.png'),full_page=True,animations='disabled')
             page.screenshot(path=str(ROOT/f'docs/website-hero-{width}.png'),animations='disabled')
         page.emulate_media(reduced_motion='reduce')
+        page.locator('[data-frame="0.5"]').click()
+        expect(page.locator('#film-timeline')).to_have_value('50')
+        page.evaluate('window.scrollBy(0,100)')
+        page.wait_for_timeout(150)
+        expect(page.locator('#film-timeline')).to_have_value('50')
         assert page.locator('.orb').evaluate("e=>getComputedStyle(e).animationName")=='none'
         assert page.locator('.scan-line').evaluate("e=>getComputedStyle(e).animationName")=='none'
         assert page.evaluate("document.fonts.check('16px \"Space Grotesk\"') && document.fonts.check('16px Manrope')")
+        page.route('**/assets/evidence-film.mp4',lambda route:route.abort())
+        page.reload()
+        page.locator('[data-frame="0.5"]').click()
+        expect(page.locator('#film-hint')).to_contain_text('Film unavailable')
+        assert page.locator('#film').evaluate("e=>e.classList.contains('film-unavailable')")
         assert not errors,errors
         browser.close()
-    print(json.dumps({'result':'PASS','viewports':[1440,768,390,320],'checks':['production CSP','screenshot tabs','coverage example','theme switch','three palettes and persistence','motion pause and persistence','reduced motion','self-hosted fonts','FAQ','no horizontal overflow','no JS errors']}))
+    print(json.dumps({'result':'PASS','viewports':[1440,768,390,320],'checks':['production CSP','HTTP byte ranges','film decoding and chapter seek','scroll scrubbing','keyboard timeline','poster fallback','reduced-motion scroll disabled','screenshot tabs','coverage example','theme switch','three palettes and persistence','motion pause and persistence','reduced motion','self-hosted fonts','FAQ','no horizontal overflow','no JS errors']}))
 finally:server.shutdown();server.server_close()

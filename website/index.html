@@ -15,6 +15,7 @@
     <script src="/site.js" defer></script>
   </head>
   <body>
+<svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 19 19 5M5 5h14v14"/></symbol><symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol><symbol id="icon-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></symbol><symbol id="icon-target" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9M12 7a5 5 0 1 0 5 5M12 12l8-8m-4 0h4v4"/></symbol><symbol id="icon-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Zm-4 9 3 3 5-6"/></symbol><symbol id="icon-sun" viewBox="0 0 24 24"><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0"/></symbol><symbol id="icon-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol></svg>
     <div class="reading-progress" aria-hidden="true"></div>
     <a class="skip" href="#main">Skip to content</a>
     <header>
@@ -30,11 +31,11 @@
         <a href="#tour">Explore</a><a href="#how">How it works</a
         ><a href="#questions">Questions</a
         ><button id="site-theme" aria-label="Switch website color theme">
-          ◐</button
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-sun"/></svg></button
         ><a
           class="small-button"
           href="https://github.com/bhavishy2801/NotSoFast"
-          >GitHub ↗</a
+          >GitHub <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"/></svg></a
         >
       </nav>
     </header>
@@ -54,8 +55,8 @@
           <a
             class="primary"
             href="https://github.com/bhavishy2801/NotSoFast/releases"
-            >Get the desktop app <span>↗</span></a
-          ><a class="secondary" href="#tour">Take a closer look ↓</a>
+            >Get the desktop app <span class="icon-disc"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-download"/></svg></span></a
+          ><a class="secondary" href="#tour">Explore the experience <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-down"/></svg></a>
         </div>
         <p class="fine">Windows x64 · Local workspace · Optional cloud saves</p>
         </div>
@@ -64,10 +65,10 @@
           <div class="orbit orbit-one" aria-hidden="true"></div>
           <div class="orbit orbit-two" aria-hidden="true"></div>
           <div class="orbit orbit-three" aria-hidden="true"></div>
-          <div class="orb" aria-hidden="true"><span>N<span>↗</span></span></div>
-          <div class="signal signal-snapshot"><span class="signal-icon">⌘</span><div><small>01 / IMMUTABLE</small><strong>One exact snapshot</strong><code>HEAD → evidence</code></div></div>
-          <div class="signal signal-evidence"><span class="signal-icon">◎</span><div><small>02 / SCOPED</small><strong>Every claim has context.</strong><div class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
-          <div class="signal signal-action"><span class="signal-icon">↗</span><div><small>03 / GUARDED</small><strong>Review. Then act.</strong><code>policy → publication</code></div></div>
+          <div class="orb" aria-hidden="true"><span>N<span class="icon-disc"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"/></svg></span></span></div>
+          <div class="signal signal-snapshot"><span class="signal-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-layers"/></svg></span><div><small>01 / IMMUTABLE</small><strong>One exact snapshot</strong><code>HEAD → evidence</code></div></div>
+          <div class="signal signal-evidence"><span class="signal-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-target"/></svg></span><div><small>02 / SCOPED</small><strong>Every claim has context.</strong><div class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="signal signal-action"><span class="signal-icon"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"/></svg></span><div><small>03 / GUARDED</small><strong>Review. Then act.</strong><code>policy → publication</code></div></div>
           <span class="orbit-caption">THE EVIDENCE LAYER / CONCEPTUAL VIEW</span>
         </div>
         <div class="principles">
@@ -76,7 +77,14 @@
           ><span>03 &nbsp; ACT WITH EVIDENCE</span>
         </div>
       </section>
-      <div class="manifesto" aria-label="Product principles"><span>Local by design</span><i>✳</i><span>Evidence you can inspect</span><i>✳</i><span>Your next move, reviewed</span><i>✳</i><span>Open source</span></div>
+      <section class="film-section" id="film" aria-labelledby="film-heading">
+<div class="film-stage">
+<div class="film-topline"><span class="eyebrow">THE SPACE BETWEEN SEARCH AND ACTION</span><span class="film-edition">FIELD NOTES / 001</span></div>
+<div class="film-media"><video id="evidence-film" muted playsinline preload="none" poster="/assets/evidence-poster.jpg" aria-label="Abstract particles assemble into a structured evidence sphere"><source src="/assets/evidence-film.mp4" type="video/mp4" /></video><div class="film-vignette"></div></div>
+<div class="film-copy"><span id="film-chapter">01 / THE SEARCH SPACE</span><h2 id="film-heading">From scattered signals.<br /><em>To a clearer picture.</em></h2><p id="film-description">A search starts with possibilities. The parts you haven't checked still matter.</p></div>
+<div class="film-controls"><div class="film-chapters" role="group" aria-label="Film chapters"><button data-frame="0" aria-pressed="true">01 <span>Search</span></button><button data-frame="0.5" aria-pressed="false">02 <span>Connect</span></button><button data-frame="0.98" aria-pressed="false">03 <span>Review</span></button></div><label for="film-timeline">Explore the sequence <span id="film-percent">0%</span></label><input id="film-timeline" type="range" min="0" max="100" value="0" aria-label="Film position" /><p id="film-hint">Scroll to reveal · or drag the timeline. Conceptual animation, not a live repository.</p></div>
+</div></section>
+<div class="manifesto" aria-label="Product principles"><span>Local by design</span><i>✳</i><span>Evidence you can inspect</span><i>✳</i><span>Your next move, reviewed</span><i>✳</i><span>Open source</span></div>
       <section id="tour" class="tour">
         <div class="section-heading">
           <div>
@@ -163,7 +171,7 @@
         <div class="workflow-grid">
           <article><div class="step-art snapshot-art" aria-hidden="true"><i></i><i></i><i></i><span>SNAPSHOT / LOCKED</span></div><span class="step-number">01</span><h3>Choose your ground.</h3><p>Start from a committed Git snapshot. A stable reference makes each check meaningful.</p></article>
           <article><div class="step-art search-art" aria-hidden="true"><div class="scan-line"></div><span>src/</span><span>config/</span><span>docs/</span></div><span class="step-number">02</span><h3>Make the gaps visible.</h3><p>Inspect scoped receipts. Combine coverage. Search the parts you haven't checked.</p></article>
-          <article><div class="step-art review-art" aria-hidden="true"><span>POLICY CHECK</span><div>Evidence → Review</div><b>↗</b></div><span class="step-number">03</span><h3>Give the action a gate.</h3><p>Review the proposed write and policy result before publishing to the managed branch.</p></article>
+          <article><div class="step-art review-art" aria-hidden="true"><span>POLICY CHECK</span><div>Evidence → Review</div><b><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-shield"/></svg></b></div><span class="step-number">03</span><h3>Give the action a gate.</h3><p>Review the proposed write and policy result before publishing to the managed branch.</p></article>
         </div>
       </section>
       <section class="features">
@@ -193,8 +201,8 @@
         </article>
       </section>
       <section class="atmosphere" aria-labelledby="atmosphere-title">
-        <div><p class="eyebrow">A DIFFERENT STATE OF MIND</p><h2 id="atmosphere-title">Find your<br /><span class="soft">frequency.</span></h2><p>A quieter canvas. A brighter signal. Set the mood of this website.</p><div class="palette-options" role="group" aria-label="Website accent palette"><button data-palette="citrus" aria-pressed="true"><i></i>Citrus</button><button data-palette="glacier" aria-pressed="false"><i></i>Glacier</button><button data-palette="orchid" aria-pressed="false"><i></i>Orchid</button></div><p class="fine">Use ◐ in the navigation to switch between light and dark.</p><button id="site-motion" class="motion-control" aria-pressed="false">Pause motion</button></div>
-        <div class="palette-art" aria-hidden="true"><div class="palette-halo"></div><span>CLARITY, IN YOUR COLORS.</span><strong>Aa<span>↗</span></strong><div class="palette-spectrum"><i></i><i></i><i></i><i></i><i></i></div><small>NOTSOFAST / PERSONAL BY DESIGN</small></div>
+        <div><p class="eyebrow">A DIFFERENT STATE OF MIND</p><h2 id="atmosphere-title">Find your<br /><span class="soft">frequency.</span></h2><p>A quieter canvas. A brighter signal. Set the mood of this website.</p><div class="palette-options" role="group" aria-label="Website accent palette"><button data-palette="citrus" aria-pressed="true"><i></i>Citrus</button><button data-palette="glacier" aria-pressed="false"><i></i>Glacier</button><button data-palette="orchid" aria-pressed="false"><i></i>Orchid</button></div><p class="fine">Use the appearance button in the navigation to switch between light and dark.</p><button id="site-motion" class="motion-control" aria-pressed="false">Pause motion</button></div>
+        <div class="palette-art" aria-hidden="true"><div class="palette-halo"></div><span>CLARITY, IN YOUR COLORS.</span><strong>Aa<span class="icon-disc"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"/></svg></span></strong><div class="palette-spectrum"><i></i><i></i><i></i><i></i><i></i></div><small>NOTSOFAST / PERSONAL BY DESIGN</small></div>
       </section>
       <section class="download" id="download">
         <p class="eyebrow">YOUR CODE. YOUR MACHINE. YOUR NEXT MOVE.</p>
@@ -203,7 +211,7 @@
           <a
             class="primary"
             href="https://github.com/bhavishy2801/NotSoFast/releases"
-            >Windows release downloads ↗</a
+            >Windows release downloads <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-download"/></svg></a
           ><a
             class="secondary"
             href="https://github.com/bhavishy2801/NotSoFast#start-with-the-app"
@@ -263,8 +271,8 @@
       <p>Built for evidence before action.</p>
       <a href="https://github.com/bhavishy2801/NotSoFast/blob/main/LICENSE"
         >MIT license</a
-      ><a href="https://github.com/bhavishy2801/NotSoFast">Source ↗</a>
+      ><a href="https://github.com/bhavishy2801/NotSoFast">Source <svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"/></svg></a>
     </footer>
-    <div class="closing-word" aria-hidden="true">NotSoFast<span>↗</span></div>
+    <div class="closing-word" aria-hidden="true">NotSoFast<span class="icon-disc"><svg class="icon" aria-hidden="true" focusable="false"><use href="#icon-arrow"/></svg></span></div>
   </body>
 </html>

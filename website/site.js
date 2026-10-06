@@ -95,3 +95,66 @@ for (const button of document.querySelectorAll("[data-scope]"))
       : "Partial coverage · publication is not justified";
     document.querySelector("#witness").classList.toggle("found", full);
   };
+
+// Scroll scrubs a local, seekable film. Manual controls work independently.
+const filmSection = document.querySelector('#film');
+const film = document.querySelector('#evidence-film');
+const timeline = document.querySelector('#film-timeline');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+let filmLoaded = false, filmTarget = 0, filmTick = false, lastSeek = -1, manualFilm = false;
+const chapters = [
+  ['01 / THE SEARCH SPACE', "A search starts with possibilities. The parts you haven't checked still matter."],
+  ['02 / CONNECT THE EVIDENCE', 'Scoped receipts preserve what was checked, so coverage can be inspected and combined.'],
+  ['03 / REVIEW THE NEXT MOVE', 'Evidence informs the policy check. Review the proposed action before publishing.']
+];
+function loadFilm() {
+  if (!filmLoaded) { filmLoaded = true; film.load(); }
+}
+function seekFilm() {
+  if (!film.seeking && Number.isFinite(film.duration) && film.duration > 0) {
+    const target = filmTarget * Math.max(0, film.duration - 0.08);
+    if (Math.abs(film.currentTime - target) > 0.045 && Math.abs(lastSeek - target) > .025) {
+      lastSeek = target;
+      film.currentTime = target;
+    }
+  }
+}
+function showFilm(value, manual = false) {
+  filmTarget = Math.max(0, Math.min(1, value));
+  timeline.value = String(Math.round(filmTarget * 100));
+  document.querySelector('#film-percent').textContent = `${Math.round(filmTarget * 100)}%`;
+  const chapter = filmTarget < .33 ? 0 : filmTarget < .72 ? 1 : 2;
+  document.querySelector('#film-chapter').textContent = chapters[chapter][0];
+  document.querySelector('#film-description').textContent = chapters[chapter][1];
+  document.querySelectorAll('[data-frame]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === chapter)));
+  if (manual) { manualFilm = true; loadFilm(); }
+  seekFilm();
+}
+film.addEventListener('loadedmetadata', seekFilm);
+film.addEventListener('seeked', seekFilm);
+film.addEventListener('error', () => {
+  filmSection.classList.add('film-unavailable');
+  document.querySelector('#film-hint').textContent = 'Film unavailable. The still illustration and chapter descriptions remain available.';
+});
+film.querySelector('source').addEventListener('error', () => film.dispatchEvent(new Event('error')));
+function scrollFilm() {
+  filmTick = false;
+  if (manualFilm || reduced.matches || document.body.classList.contains('motion-paused') || innerHeight < 640) return;
+  const bounds = filmSection.getBoundingClientRect();
+  if (bounds.top > innerHeight || bounds.bottom < 0) return;
+  loadFilm();
+  showFilm(-bounds.top / Math.max(1, bounds.height - innerHeight));
+}
+addEventListener('scroll', () => {
+  if (!filmTick) { filmTick = true; requestAnimationFrame(scrollFilm); }
+}, { passive: true });
+addEventListener('resize', scrollFilm);
+addEventListener('wheel', () => { manualFilm = false; }, { passive: true });
+addEventListener('touchmove', () => { manualFilm = false; }, { passive: true });
+addEventListener('keydown', event => {
+  if (event.target !== timeline && ['PageDown','PageUp','ArrowDown','ArrowUp','Home','End',' '].includes(event.key)) manualFilm = false;
+});
+reduced.addEventListener('change', scrollFilm);
+timeline.addEventListener('input', () => showFilm(Number(timeline.value)/100, true));
+for (const button of document.querySelectorAll('[data-frame]')) button.addEventListener('click', () => showFilm(Number(button.dataset.frame), true));
+scrollFilm();
