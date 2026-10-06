@@ -10,10 +10,12 @@
     <meta name="theme-color" content="#101411" />
     <title>NotSoFast — Move fast. Know first.</title>
     <link rel="icon" href="/assets/mark.svg" />
+    <link rel="preload" href="/assets/fonts/SpaceGrotesk.ttf" as="font" type="font/ttf" crossorigin />
     <link rel="stylesheet" href="/site.css" />
     <script src="/site.js" defer></script>
   </head>
   <body>
+    <div class="reading-progress" aria-hidden="true"></div>
     <a class="skip" href="#main">Skip to content</a>
     <header>
       <a class="brand" href="#"
@@ -38,14 +40,15 @@
     </header>
     <main id="main">
       <section class="hero">
-        <div class="hero-glow"></div>
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-copy">
         <p class="eyebrow">
-          <span class="live-dot"></span> A LITTLE CERTAINTY GOES A LONG WAY
+          <span class="live-dot"></span> EVIDENCE BEFORE ACTION
         </p>
         <h1>Move fast.<br /><span>Know first.</span></h1>
         <p class="lead">
-          Your next action deserves more than a guess.<br />Turn a search into
-          evidence. Review the whole picture.<br />Then make your move.
+          Your next action deserves more than a guess. Turn a search into
+          evidence. Review the whole picture. Then make your move.
         </p>
         <div class="actions">
           <a
@@ -55,12 +58,25 @@
           ><a class="secondary" href="#tour">Take a closer look ↓</a>
         </div>
         <p class="fine">Windows x64 · Local workspace · Optional cloud saves</p>
+        </div>
+        <div class="observatory" aria-label="Illustration: evidence connects a Git snapshot to a reviewed action">
+          <div class="orbit-grid" aria-hidden="true"></div>
+          <div class="orbit orbit-one" aria-hidden="true"></div>
+          <div class="orbit orbit-two" aria-hidden="true"></div>
+          <div class="orbit orbit-three" aria-hidden="true"></div>
+          <div class="orb" aria-hidden="true"><span>N<span>↗</span></span></div>
+          <div class="signal signal-snapshot"><span class="signal-icon">⌘</span><div><small>01 / IMMUTABLE</small><strong>One exact snapshot</strong><code>HEAD → evidence</code></div></div>
+          <div class="signal signal-evidence"><span class="signal-icon">◎</span><div><small>02 / SCOPED</small><strong>Every claim has context.</strong><div class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="signal signal-action"><span class="signal-icon">↗</span><div><small>03 / GUARDED</small><strong>Review. Then act.</strong><code>policy → publication</code></div></div>
+          <span class="orbit-caption">THE EVIDENCE LAYER / CONCEPTUAL VIEW</span>
+        </div>
         <div class="principles">
           <span>01 &nbsp; SEE THE SNAPSHOT</span
           ><span>02 &nbsp; CHECK THE CLAIM</span
           ><span>03 &nbsp; ACT WITH EVIDENCE</span>
         </div>
       </section>
+      <div class="manifesto" aria-label="Product principles"><span>Local by design</span><i>✳</i><span>Evidence you can inspect</span><i>✳</i><span>Your next move, reviewed</span><i>✳</i><span>Open source</span></div>
       <section id="tour" class="tour">
         <div class="section-heading">
           <div>
@@ -128,7 +144,7 @@
               ><span id="witness">└ config/database.yaml</span>
             </div>
           </div>
-          <div class="outcome">
+          <div class="outcome" aria-live="polite">
             <span id="decision" class="decision">UNKNOWN</span>
             <h3 id="decision-title">A partial search leaves a gap.</h3>
             <p id="decision-body">
@@ -140,6 +156,14 @@
               >Partial coverage · publication is not justified</small
             >
           </div>
+        </div>
+      </section>
+      <section class="workflow" aria-labelledby="workflow-title">
+        <div class="section-heading"><div><p class="eyebrow">FROM INTENT TO AN INFORMED ACTION</p><h2 id="workflow-title">Three moments.<br /><span class="soft">One clearer decision.</span></h2></div><p>Keep the context that matters between the search and the write.</p></div>
+        <div class="workflow-grid">
+          <article><div class="step-art snapshot-art" aria-hidden="true"><i></i><i></i><i></i><span>SNAPSHOT / LOCKED</span></div><span class="step-number">01</span><h3>Choose your ground.</h3><p>Start from a committed Git snapshot. A stable reference makes each check meaningful.</p></article>
+          <article><div class="step-art search-art" aria-hidden="true"><div class="scan-line"></div><span>src/</span><span>config/</span><span>docs/</span></div><span class="step-number">02</span><h3>Make the gaps visible.</h3><p>Inspect scoped receipts. Combine coverage. Search the parts you haven't checked.</p></article>
+          <article><div class="step-art review-art" aria-hidden="true"><span>POLICY CHECK</span><div>Evidence → Review</div><b>↗</b></div><span class="step-number">03</span><h3>Give the action a gate.</h3><p>Review the proposed write and policy result before publishing to the managed branch.</p></article>
         </div>
       </section>
       <section class="features">
@@ -167,6 +191,10 @@
             reduced-motion support.
           </p>
         </article>
+      </section>
+      <section class="atmosphere" aria-labelledby="atmosphere-title">
+        <div><p class="eyebrow">A DIFFERENT STATE OF MIND</p><h2 id="atmosphere-title">Find your<br /><span class="soft">frequency.</span></h2><p>A quieter canvas. A brighter signal. Set the mood of this website.</p><div class="palette-options" role="group" aria-label="Website accent palette"><button data-palette="citrus" aria-pressed="true"><i></i>Citrus</button><button data-palette="glacier" aria-pressed="false"><i></i>Glacier</button><button data-palette="orchid" aria-pressed="false"><i></i>Orchid</button></div><p class="fine">Use ◐ in the navigation to switch between light and dark.</p><button id="site-motion" class="motion-control" aria-pressed="false">Pause motion</button></div>
+        <div class="palette-art" aria-hidden="true"><div class="palette-halo"></div><span>CLARITY, IN YOUR COLORS.</span><strong>Aa<span>↗</span></strong><div class="palette-spectrum"><i></i><i></i><i></i><i></i><i></i></div><small>NOTSOFAST / PERSONAL BY DESIGN</small></div>
       </section>
       <section class="download" id="download">
         <p class="eyebrow">YOUR CODE. YOUR MACHINE. YOUR NEXT MOVE.</p>
@@ -237,5 +265,6 @@
         >MIT license</a
       ><a href="https://github.com/bhavishy2801/NotSoFast">Source ↗</a>
     </footer>
+    <div class="closing-word" aria-hidden="true">NotSoFast<span>↗</span></div>
   </body>
 </html>

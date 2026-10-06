@@ -37,9 +37,28 @@ try:
             page.locator('summary').first.click()
             expect(page.locator('details').first).to_have_attribute('open','')
             page.locator('summary').first.click()
+            for palette in ['citrus','glacier','orchid']:
+                page.locator('button[data-palette="'+palette+'"]').click()
+                expect(page.locator('body')).to_have_attribute('data-palette',palette)
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.locator('#site-motion').click()
+            expect(page.locator('#site-motion')).to_have_attribute('aria-pressed','true')
+            assert page.locator('.orb').evaluate("e=>getComputedStyle(e).animationPlayState")=='paused'
+            page.reload()
+            expect(page.locator('body')).to_have_attribute('data-palette','orchid')
+            expect(page.locator('#site-motion')).to_have_attribute('aria-pressed','true')
+            assert page.locator('.hero-copy').evaluate("e=>getComputedStyle(e).opacity")=='1'
+            page.locator('#site-motion').click()
+            page.locator('button[data-palette="citrus"]').click()
+            page.evaluate('document.fonts.ready')
             page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
             page.screenshot(path=str(ROOT/f'docs/website-{width}.png'),full_page=True,animations='disabled')
+            page.screenshot(path=str(ROOT/f'docs/website-hero-{width}.png'),animations='disabled')
+        page.emulate_media(reduced_motion='reduce')
+        assert page.locator('.orb').evaluate("e=>getComputedStyle(e).animationName")=='none'
+        assert page.locator('.scan-line').evaluate("e=>getComputedStyle(e).animationName")=='none'
+        assert page.evaluate("document.fonts.check('16px \"Space Grotesk\"') && document.fonts.check('16px Manrope')")
         assert not errors,errors
         browser.close()
-    print(json.dumps({'result':'PASS','viewports':[1440,768,390,320],'checks':['production CSP','screenshot tabs','coverage example','theme switch','FAQ','no horizontal overflow','no JS errors']}))
+    print(json.dumps({'result':'PASS','viewports':[1440,768,390,320],'checks':['production CSP','screenshot tabs','coverage example','theme switch','three palettes and persistence','motion pause and persistence','reduced motion','self-hosted fonts','FAQ','no horizontal overflow','no JS errors']}))
 finally:server.shutdown();server.server_close()
