@@ -43,6 +43,14 @@ The website links to the repository's Releases page, avoiding an invented direct
 
 With Git integration connected, pushes to the configured production branch trigger deployments. The included `website/vercel.json` supplies security headers and clean URL behavior.
 
+Both supported project roots now have explicit static configuration: `website/vercel.json` serves `.`, while the repository-root `vercel.json` serves only `website`. You can therefore leave Root Directory at the repository root if preferred. Do not set it to `desktop/web` or `dist`.
+
+### Repair an existing 404 deployment
+
+Push these configuration files first, then inspect **Project → Settings → Build and Deployment**. Choose framework **Other** and Root Directory `website` (or leave it empty to use the repository-root configuration). Remove stale build/install/output overrides; the checked-in configuration sets empty commands and the correct output directory. Redeploy the latest commit—changing settings does not repair an older deployment.
+
+Open the new deployment's own URL from its detail page. Check that its output contains `index.html`, `site.css`, `site.js` and `assets/`. If that URL works but your custom domain fails, check the domain's project assignment separately. If it still fails, provide that deployment URL, the selected root directory and its build log. A generic `404 NOT_FOUND` alone cannot distinguish missing output from a stale deployment or domain issue.
+
 ## Alternative: Vercel CLI
 
 Requires Node.js/npm and your Vercel login. From the repository root:

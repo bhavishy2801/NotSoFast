@@ -1,9 +1,15 @@
 """Checks the actual static website in a browser, including its production CSP."""
-import functools,http.server,json,threading
+import functools,http.server,json,os,threading
 from pathlib import Path
 from playwright.sync_api import sync_playwright,expect
 ROOT=Path(__file__).resolve().parents[1]
 config=json.loads((ROOT/'website/vercel.json').read_text(encoding='utf-8-sig'))
+root_config=json.loads((ROOT/'vercel.json').read_text(encoding='utf-8-sig'))
+for base,settings in [(ROOT,root_config),(ROOT/'website',config)]:
+    assert (base/settings['outputDirectory']).resolve()==(ROOT/'website').resolve()
+    assert (base/settings['outputDirectory']/'index.html').is_file()
+    assert settings['framework'] is None and settings['buildCommand']==''
+assert root_config['headers']==config['headers']
 class Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
     def end_headers(self):
@@ -13,7 +19,7 @@ server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Handler
 threading.Thread(target=server.serve_forever,daemon=True).start()
 try:
     with sync_playwright() as p:
-        browser=p.chromium.launch(channel='msedge',headless=True)
+        browser=p.chromium.launch(channel=os.environ.get('NSF_BROWSER','msedge'),headless=True)
         page=browser.new_page(viewport={'width':1440,'height':1000});errors=[]
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto('http://127.0.0.1:'+str(server.server_port))

@@ -19,11 +19,15 @@ jobs:
       - run: python python/test_model_harness.py
       - run: python python/demo.py
       - run: python python/evaluate.py
+      - run: python python/test_container_readiness.py
       - run: docker build -t notsofast:test .
       - run: python python/test_container.py
       - run: python -m pip install 'mcp[cli]==2.3.0' 'playwright==1.63.0'
       - run: python python/test_mcp_sdk.py
       - run: python -m playwright install --with-deps chromium
+      - run: python python/test_website.py
+        env:
+          NSF_BROWSER: chromium
       - run: go build -o .tools/notsofast ./cmd/notsofast
       - run: python python/test_desktop.py
         env:
