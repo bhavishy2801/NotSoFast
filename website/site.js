@@ -101,11 +101,20 @@ const filmSection = document.querySelector('#film');
 const film = document.querySelector('#evidence-film');
 const timeline = document.querySelector('#film-timeline');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+const portraitFilm = matchMedia('(max-width: 760px)');
 let filmLoaded = false, filmTarget = 0, filmTick = false, lastSeek = -1, manualFilm = false;
+function filmFormat() {
+  film.poster = portraitFilm.matches ? '/assets/evidence-poster-mobile.jpg' : '/assets/evidence-poster.jpg';
+  film.querySelector('source').src = portraitFilm.matches ? '/assets/evidence-film-mobile.mp4' : '/assets/evidence-film.mp4';
+  lastSeek = -1;
+  if (filmLoaded) film.load();
+}
+portraitFilm.addEventListener('change', filmFormat);
+filmFormat();
 const chapters = [
-  ['01 / THE SEARCH SPACE', "A search starts with possibilities. The parts you haven't checked still matter."],
-  ['02 / CONNECT THE EVIDENCE', 'Scoped receipts preserve what was checked, so coverage can be inspected and combined.'],
-  ['03 / REVIEW THE NEXT MOVE', 'Evidence informs the policy check. Review the proposed action before publishing.']
+  ['01 / CHECK THE SCOPE', 'A partial search cannot prove that a filename is absent everywhere.'],
+  ['02 / FIND THE MATCH', 'Search the missing coverage. Finding config/database.yaml refutes the absence claim.'],
+  ['03 / BLOCK THE DUPLICATE', 'The exact-filename policy blocks the duplicate write. The source repository stays unchanged.']
 ];
 function loadFilm() {
   if (!filmLoaded) { filmLoaded = true; film.load(); }
@@ -123,7 +132,7 @@ function showFilm(value, manual = false) {
   filmTarget = Math.max(0, Math.min(1, value));
   timeline.value = String(Math.round(filmTarget * 100));
   document.querySelector('#film-percent').textContent = `${Math.round(filmTarget * 100)}%`;
-  const chapter = filmTarget < .33 ? 0 : filmTarget < .72 ? 1 : 2;
+  const chapter = filmTarget < 1/3 ? 0 : filmTarget < 2/3 ? 1 : 2;
   document.querySelector('#film-chapter').textContent = chapters[chapter][0];
   document.querySelector('#film-description').textContent = chapters[chapter][1];
   document.querySelectorAll('[data-frame]').forEach((button, index) => button.setAttribute('aria-pressed', String(index === chapter)));
@@ -131,15 +140,19 @@ function showFilm(value, manual = false) {
   seekFilm();
 }
 film.addEventListener('loadedmetadata', seekFilm);
+film.addEventListener('loadeddata', () => {
+  filmSection.classList.remove('film-unavailable');
+  document.querySelector('#film-hint').textContent = 'Scroll to reveal · or drag the timeline. Illustrated product walkthrough; no live repository is modified.';
+});
 film.addEventListener('seeked', seekFilm);
 film.addEventListener('error', () => {
   filmSection.classList.add('film-unavailable');
   document.querySelector('#film-hint').textContent = 'Film unavailable. The still illustration and chapter descriptions remain available.';
 });
-film.querySelector('source').addEventListener('error', () => film.dispatchEvent(new Event('error')));
+for (const source of film.querySelectorAll('source')) source.addEventListener('error', () => film.dispatchEvent(new Event('error')));
 function scrollFilm() {
   filmTick = false;
-  if (manualFilm || reduced.matches || document.body.classList.contains('motion-paused') || innerHeight < 640) return;
+  if (manualFilm || reduced.matches || document.body.classList.contains('motion-paused') || innerHeight < 740) return;
   const bounds = filmSection.getBoundingClientRect();
   if (bounds.top > innerHeight || bounds.bottom < 0) return;
   loadFilm();

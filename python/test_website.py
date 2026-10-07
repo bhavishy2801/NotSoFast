@@ -37,21 +37,29 @@ try:
         for width,height in [(1440,1000),(768,1024),(390,844),(320,568)]:
             page.set_viewport_size({'width':width,'height':height})
             page.locator('[data-frame="0.98"]').click()
-            expect(page.locator('#film-chapter')).to_have_text('03 / REVIEW THE NEXT MOVE')
+            expect(page.locator('#film-chapter')).to_have_text('03 / BLOCK THE DUPLICATE')
             for _ in range(60):
-                if page.locator('#evidence-film').evaluate('v=>v.readyState>=2 && !v.seeking && v.currentTime>7'):break
+                if page.locator('#evidence-film').evaluate('v=>v.readyState>=2 && !v.seeking && v.currentTime>10'):break
                 page.wait_for_timeout(100)
-            assert page.locator('#evidence-film').evaluate('v=>v.readyState>=2 && v.currentTime>7'), 'Film did not seek to final chapter'
+            assert page.locator('#evidence-film').evaluate('v=>v.readyState>=2 && v.currentTime>10'), 'Film did not seek to final chapter'
+            assert not page.locator('#film').evaluate("e=>e.classList.contains('film-unavailable')"), 'Successful video load must clear fallback'
+            assert page.locator('#evidence-film').evaluate('v=>v.videoHeight>v.videoWidth') == (width<=760), 'Wrong film framing for viewport'
+            assert page.locator('#evidence-film').evaluate("v=>getComputedStyle(v).objectFit==='contain'"), 'Product video must not be cropped'
+            assert page.locator('.film-media').evaluate("e=>{const a=e.getBoundingClientRect(),b=document.querySelector('.film-copy').getBoundingClientRect();return a.right<=b.left+1||a.bottom<=b.top+1;}"), 'Captions obscure the product video'
             page.locator('#film-timeline').focus()
             page.keyboard.press('Home')
             expect(page.locator('#film-timeline')).to_have_value('0')
-            expect(page.locator('#film-chapter')).to_have_text('01 / THE SEARCH SPACE')
+            expect(page.locator('#film-chapter')).to_have_text('01 / CHECK THE SCOPE')
+            for _ in range(40):
+                if page.locator('#evidence-film').evaluate('v=>!v.seeking && v.currentTime<.2'):break
+                page.wait_for_timeout(100)
+            assert page.locator('#evidence-film').evaluate('v=>v.currentTime<.2'), 'Backward seeking failed'
             if width==1440:
                 page.evaluate("window.dispatchEvent(new WheelEvent('wheel')); const f=document.querySelector('#film'); window.scrollTo({top:f.offsetTop+(f.offsetHeight-innerHeight)*.5,behavior:'instant'})")
                 for _ in range(50):
-                    if page.locator('#evidence-film').evaluate('v=>!v.seeking && v.currentTime>3 && v.currentTime<5'):break
+                    if page.locator('#evidence-film').evaluate('v=>!v.seeking && v.currentTime>5 && v.currentTime<7'):break
                     page.wait_for_timeout(100)
-                assert page.locator('#evidence-film').evaluate('v=>v.currentTime>3 && v.currentTime<5'), 'Scroll did not scrub the film'
+                assert page.locator('#evidence-film').evaluate('v=>v.currentTime>5 && v.currentTime<7'), 'Scroll did not scrub the film'
             for label in ['After hours','Daylight','Saved work']:
                 page.get_by_role('button',name=label,exact=True).click()
                 page.locator("#product-screen").evaluate("e => e.decode()")
@@ -90,7 +98,7 @@ try:
         assert page.locator('.orb').evaluate("e=>getComputedStyle(e).animationName")=='none'
         assert page.locator('.scan-line').evaluate("e=>getComputedStyle(e).animationName")=='none'
         assert page.evaluate("document.fonts.check('16px \"Space Grotesk\"') && document.fonts.check('16px Manrope')")
-        page.route('**/assets/evidence-film.mp4',lambda route:route.abort())
+        page.route('**/assets/evidence-film*.mp4',lambda route:route.abort())
         page.reload()
         page.locator('[data-frame="0.5"]').click()
         expect(page.locator('#film-hint')).to_contain_text('Film unavailable')

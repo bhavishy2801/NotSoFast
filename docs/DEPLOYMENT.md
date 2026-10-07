@@ -84,7 +84,7 @@ $env:NSF_DESKTOP_EXE = "$PWD/dist/NotSoFast/NotSoFast.exe"
 
 The website test exercises the real page with production CSP at four viewport sizes. The app test exercises eight pages, palette/brightness controls, offline backup round-trip and scripted model transport through the UI. Scripted transport is not real-model inference.
 
-The preview server supports HTTP byte ranges for the scroll-controlled MP4. A basic server without range support may display the video but fail to seek. Vercel serves the bundled static video directly. The 8-second, silent motion film is original procedural artwork, generated with `scripts/render-film.py` (build-time Pillow and imageio-ffmpeg); the deployed site has no Python or rendering dependencies. It loads near the film section, with chapter controls, a keyboard timeline and a poster fallback. Reduced motion disables scroll-driven seeking; manual controls remain available.
+The preview server supports HTTP byte ranges for the scroll-controlled MP4. A basic server without range support may display the video but fail to seek. Vercel serves the bundled static video directly. The 12-second, silent motion film is an illustrated product walkthrough: scoped search, matching witness and blocked duplicate write, generated with `scripts/render-film.py` (build-time Pillow and imageio-ffmpeg); the deployed site has no Python or rendering dependencies. It loads near the film section, with chapter controls, a keyboard timeline and a poster fallback. Separate landscape and portrait encodes keep the interface visible without cropping; resizing switches formats while retaining the requested position. Reduced motion disables scroll-driven seeking; manual controls remain available.
 
 ## What remains on your side
 
