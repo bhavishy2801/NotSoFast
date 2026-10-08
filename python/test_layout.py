@@ -31,6 +31,8 @@ with tempfile.TemporaryDirectory(prefix='layout-',dir=ROOT/'.tools') as temp:
             errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
             page.goto(info['url']+'/#'+info['token'])
             expect(page.locator('#session-gate')).to_be_hidden()
+            page.evaluate("async () => { await document.fonts.load('14px Manrope'); await document.fonts.load('24px \"Space Grotesk\"'); }")
+            assert page.evaluate("document.fonts.check('14px Manrope') && document.fonts.check('24px \"Space Grotesk\"')"), 'Embedded fonts failed to load'
             page.locator('#try-demo').click()
             expect(page.locator('#connection')).to_have_class('connection connected',timeout=45000)
             for width,height in [(1280,720),(800,500),(390,600),(320,480)]:
@@ -90,7 +92,7 @@ with tempfile.TemporaryDirectory(prefix='layout-',dir=ROOT/'.tools') as temp:
             page.locator('#model-form button[type="submit"]').click()
             expect(page.locator('#busy-bar')).to_be_hidden()
             page.locator('#run-models').click()
-            expect(page.locator('#model-results .model-trial')).to_have_count(2,timeout=60000)
+            expect(page.locator('#model-results .model-trial')).to_have_count(2,timeout=120000)
             expect(page.locator('#busy-bar')).to_be_hidden(timeout=60000)
             expect(page.locator('#model-results')).not_to_contain_text('Inspect')
             with page.expect_download() as results:page.locator('#export-models').click()

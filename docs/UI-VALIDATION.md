@@ -4,6 +4,8 @@ Tests run against the packaged Windows application using actual browser clicks a
 
 ## Layout fixes
 
+The October 8 interface refresh applies to both desktop and local browser launchers. It embeds the product site's fonts, replaces the overview orbit illustration with a three-step workflow, updates toolbar icons and improves typography, controls, lists and dialog surfaces. The browser regression now verifies the embedded fonts and checks reduced motion against the active page rather than the removed illustration.
+
 The native theme dialog lacked an inset scrollable body, clipping selection outlines and controls. All dialogs now share bounded sizing and scrollable content while keeping their headers and actions available. Short windows hide the decorative preview. A narrow-screen rule also hid Theme and Account along with the command trigger; it now targets only that trigger.
 
 ## Verified in browsers

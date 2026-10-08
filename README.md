@@ -58,6 +58,8 @@ Closing a window leaves the local service available. Use **Quit** to stop it. Re
 
 Choose **Theme** for **Daylight**, **After hours**, or **Match system**, then pick **Citrus, Tidal, Iris, Bloom, or Ember**. Preferences persist across launches and browser windows after refresh. Animation respects the OS and in-app reduced-motion settings.
 
+The desktop and local browser app share the same redesigned interface: embedded Manrope and Space Grotesk fonts, a three-step evidence workflow, clearer forms and activity lists, and coordinated light/dark surfaces. Fonts are bundled for offline use.
+
 ![After hours with Iris](docs/desktop-dark.png)
 
 **Account** provides a local display name, aggregate insights, saved drafts and GitHub bookmarks. Draft edits save locally after a short pause; **Save current draft** provides an explicit save. Resuming a draft still requires fresh verification in the selected workspace.

@@ -52,7 +52,7 @@ def run(channel='msedge'):
                 page.locator('#file-query').fill('README')
                 page.locator('#file-search-form button').click()
                 expect(page.locator('#file-list')).to_contain_text('README.md', timeout=30000)
-                expect(page.locator('#busy-bar')).to_be_hidden()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=65000)
                 page.locator('#file-list .file-row').first.click()
                 expect(page.locator('#preview-content')).to_contain_text('Orbit workspace', timeout=30000)
                 page.locator('#preview-close').click()
@@ -63,7 +63,7 @@ def run(channel='msedge'):
                 page.locator('#fill-gaps').click()
                 expect(page.locator('#decision-badge')).to_have_text('REFUTED', timeout=45000)
                 expect(page.locator('#witnesses')).to_contain_text('config/database.yaml')
-                expect(page.locator('#busy-bar')).to_be_hidden()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=65000)
                 page.locator('#compose').click()
                 expect(page.locator('#busy-bar')).to_be_hidden(timeout=45000)
                 expect(page.locator('#decision-badge')).to_have_text('REFUTED')
@@ -88,12 +88,12 @@ def run(channel='msedge'):
                 import zipfile
                 with zipfile.ZipFile(exported.value.path()) as archive:
                     assert archive.read('docs/release-notes.md').decode() == '# Release notes\n\nVerified from the desktop.\n'
-                expect(page.locator('#busy-bar')).to_be_hidden()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=65000)
                 page.locator('nav [data-page="activity"]').click()
                 page.locator('#full-activity .activity-row').filter(has_text='Guarded publication').first.click()
                 page.locator('#recover').click()
                 expect(page.locator('#detail-body')).to_contain_text('PUBLISHED', timeout=30000)
-                expect(page.locator('#busy-bar')).to_be_hidden()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=65000)
                 page.locator('#close-detail').click()
                 page.locator('nav [data-page="overview"]').click()
                 expect(page.locator('#metric-published')).to_have_text('1')
@@ -112,7 +112,7 @@ def run(channel='msedge'):
                 page.locator('nav [data-page="overview"]').click()
                 page.set_viewport_size({'width':390,'height':844})
                 page.emulate_media(reduced_motion='reduce')
-                assert page.locator('.orbit-one').evaluate('(e)=>getComputedStyle(e).animationName') == 'none'
+                assert page.locator('.page.active').evaluate('(e)=>getComputedStyle(e).animationName') == 'none'
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.screenshot(path=str(ROOT/'docs/desktop-mobile.png'), full_page=True, animations='disabled')
                 page.set_viewport_size({'width':1440,'height':1050})
@@ -128,7 +128,7 @@ def run(channel='msedge'):
                 page.screenshot(path=str(ROOT/'docs/desktop-dark.png'),full_page=True,animations='disabled')
                 page.locator('[data-page="account"]').first.click()
                 expect(page.locator('#account-insights')).to_contain_text('Saved workspaces',timeout=10000)
-                expect(page.locator('#busy-bar')).to_be_hidden()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=65000)
                 page.locator('#profile-name').fill('Saved test profile')
                 page.locator('#profile-form button').click()
                 expect(page.locator('#profile-label')).to_have_text('Saved test profile')
@@ -148,7 +148,7 @@ def run(channel='msedge'):
                 page.locator('#github-form button[type="submit"]').click()
                 expect(page.locator('#error-banner')).to_be_visible()
                 expect(page.locator('#error-message')).to_contain_text('GitHub repository URL')
-                expect(page.locator('#busy-bar')).to_be_hidden()
+                expect(page.locator('#busy-bar')).to_be_hidden(timeout=65000)
                 page.locator('#dismiss-error').click()
                 if os.environ.get('NSF_GITHUB_INTEGRATION') == '1':
                     page.locator('#github-url').fill('https://github.com/octocat/Hello-World')

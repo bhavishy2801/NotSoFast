@@ -9,3 +9,4 @@
 
 - Windows packaging bundles GitHub CLI 2.102.0 (MIT) with its upstream license: https://github.com/cli/cli/releases/tag/v2.102.0. Authentication is provided by this upstream executable.
 - Test-only tools include Playwright, psutil, pywin32 and the official MCP SDK; they are not included in the app runtime.
+- The desktop/browser frontend embeds Manrope and Space Grotesk under the SIL Open Font License 1.1. Their full license notices are included in `desktop/web/fonts/` and served with the embedded assets; the public site includes the same notices in `website/assets/fonts/`.

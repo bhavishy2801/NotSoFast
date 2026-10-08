@@ -6,6 +6,7 @@
     <meta name="color-scheme" content="light dark" />
     <title>NotSoFast — Evidence before action</title>
     <link rel="icon" href="/mark.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/Manrope.ttf" as="font" type="font/ttf" crossorigin />
     <link rel="stylesheet" href="/app.css" />
     <link rel="stylesheet" href="/themes.css" />
     <script src="/app.js" defer></script>
@@ -13,6 +14,9 @@
   <body>
     <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       <defs>
+        <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5" /></symbol>
+        <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
         <symbol id="i-grid" viewBox="0 0 24 24">
           <rect x="3" y="3" width="7" height="7" rx="1.5" />
           <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -167,9 +171,9 @@
               class="command-trigger"
               aria-label="Appearance and themes"
             >
-              ◐ Theme</button
+              <svg aria-hidden="true"><use href="#i-sun"/></svg>Theme</button
             ><button data-page="account" class="command-trigger">
-              Account
+              <svg aria-hidden="true"><use href="#i-user"/></svg>Account
             </button>
             <button
               id="command-open"
@@ -184,7 +188,7 @@
               aria-label="Open website in browser"
               title="Open authenticated website"
             >
-              Web ↗
+              Web <svg aria-hidden="true"><use href="#i-external"/></svg>
             </button>
             <span id="connection" class="connection"
               ><i></i><span>Not connected</span></span
@@ -273,7 +277,7 @@
                 >
                 <h2>Move fast.<br /><span>Know first.</span></h2>
                 <p>
-                  Turn “I couldn’t find it” into a checkable claim.<br />Every
+                  Turn “I couldn’t find it” into a checkable claim. Every
                   action starts with the whole picture.
                 </p>
                 <button data-page="evidence" class="button lime">
@@ -282,38 +286,11 @@
                   >Exact checks. Reusable receipts. Conditional writes.</span
                 >
               </div>
-              <div class="evidence-art" aria-hidden="true">
-                <div class="art-grid"></div>
-                <div class="orbit orbit-one"></div>
-                <div class="orbit orbit-two"></div>
-                <div class="orbit orbit-three"></div>
-                <div class="orbit-core">
-                  <img src="/mark.svg" alt="" /><span>VERIFY</span>
-                </div>
-                <div class="art-label art-source">
-                  <svg><use href="#i-branch" /></svg>
-                  <div>
-                    Immutable snapshot<small id="art-snapshot"
-                      >Connect to begin</small
-                    >
-                  </div>
-                  <i></i>
-                </div>
-                <div class="art-label art-receipt">
-                  <svg><use href="#i-check" /></svg>
-                  <div>
-                    Evidence receipt<small>Coverage you can inspect</small>
-                  </div>
-                </div>
-                <div class="art-label art-action">
-                  <svg><use href="#i-shield" /></svg>
-                  <div>
-                    Guarded action<small>Verified at publication</small>
-                  </div>
-                </div>
-                <div class="art-caption">
-                  <span></span>THE EVIDENCE LIFECYCLE
-                </div>
+              <div class="evidence-art workbench-flow" aria-hidden="true">
+                <div class="flow-heading">YOUR EVIDENCE WORKFLOW <span>01 — 03</span></div>
+                <div class="flow-step"><span class="flow-icon"><svg><use href="#i-branch"/></svg></span><div><small>01 / ANCHOR</small><strong>One immutable snapshot</strong><span id="art-snapshot">Connect to begin</span></div></div>
+                <div class="flow-step"><span class="flow-icon"><svg><use href="#i-search"/></svg></span><div><small>02 / INSPECT</small><strong>Coverage you can explain</strong><span>Search · combine · fill the gaps</span></div></div>
+                <div class="flow-step"><span class="flow-icon"><svg><use href="#i-shield"/></svg></span><div><small>03 / REVIEW</small><strong>A gate before the write</strong><span>Every applicable policy is checked</span></div></div>
               </div>
             </div>
             <div class="metrics">
